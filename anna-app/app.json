@@ -1,9 +1,9 @@
 {
   "slug": "home-assistant-control",
   "name": "Home Assistant Control Center",
-  "version": "0.1.0",
-  "tagline": "Connect Home Assistant and configure exactly which AI actions are allowed.",
-  "description": "Companion settings interface for the Home Assistant Executa. Configure a draft tri-state permission policy and check your secured Home Assistant connection. Credentials remain in Anna's native Executa settings. PIN-protected actions are fail-closed pending a verified approval channel.",
+  "version": "0.3.0-alpha.1",
+  "tagline": "Secure Home Assistant control and identity verification for Anna",
+  "description": "Companion Control Center for a bundled Home Assistant Executa: sensor-only defaults, per-category Disabled/Enabled/Verify, PIN and authenticator-code approval, passkey support when enabled by Anna's browser, and optional phone verification notifications. Home Assistant URL and secrets remain in Anna's Executa credential form.",
   "category": "utilities",
   "homepage_url": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
   "support_url": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa/issues",
