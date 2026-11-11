@@ -127,13 +127,34 @@ async function executeAction(cfg,action,fetcher){
     const r=await request(cfg,`/api/events/${e.event_type}`,'POST',e.event_data,fetcher);
     return {executed:true,kind:'event',event_type:e.event_type,message:r?.message||'Event submitted'};
   }
+  if(action.kind==='read_state'){
+    const id=entityId(action.entity_id);
+    const state=await request(cfg,`/api/states/${encodeURIComponent(id)}`,'GET',undefined,fetcher);
+    return {entity_id:state.entity_id,state:state.state,attributes:state.attributes||{},last_changed:state.last_changed,last_updated:state.last_updated};
+  }
+  if(action.kind==='list_states'){
+    const domain=action.domain?part(action.domain,'domain'):'',limit=action.limit;
+    if(!Number.isInteger(limit)||limit<1||limit>100)throw new InputError('Invalid state listing limit');
+    const states=await request(cfg,'/api/states','GET',undefined,fetcher);
+    if(!Array.isArray(states))throw new UpstreamError('Unexpected Home Assistant states response');
+    const includeOther=(domain && domain!=='sensor'&&domain!=='binary_sensor')||modeFor(cfg.policy,'other_read')==='enabled'||action.authorized_all===true;
+    const items=states.filter(x=>x&&typeof x.entity_id==='string'&&(!domain||x.entity_id.startsWith(domain+'.'))&&(includeOther||isSensor(x.entity_id)));
+    return {count:items.length,returned:Math.min(items.length,limit),entities:items.slice(0,limit).map(x=>({entity_id:x.entity_id,name:x.attributes?.friendly_name||x.entity_id,state:x.state,unit:x.attributes?.unit_of_measurement||null,last_changed:x.last_changed||null}))};
+  }
+  if(action.kind==='converse'){
+    const body=obj(action.body,'conversation body');
+    const text=requiredString(body.text,'text',4000);
+    const answer=await request(cfg,'/api/conversation/process','POST',{...body,text},fetcher);
+    return {text:String(answer.response?.speech?.plain?.speech||''),conversation_id:answer.conversation_id||'',response_type:answer.response?.response_type||''};
+  }
   throw new InputError('Unknown pending action type');
 }
 async function phoneNotice(cfg,receipt,fetcher){
   const svc=cfg.phoneNotifyService;
   if(!svc)return false;
   if(!/^mobile_app_[a-z0-9_]{1,80}$/.test(svc))return false;
-  const summary=receipt.action?.kind==='service'?`${receipt.action.domain}.${receipt.action.service} on ${receipt.action.entity_id}`:`Custom event: ${receipt.action?.event_type}`;
+  const a=receipt.action||{};
+  const summary=a.kind==='service'?`${a.domain}.${a.service} on ${a.entity_id}`:a.kind==='event'?`Custom event: ${a.event_type}`:a.kind==='read_state'?`Read ${a.entity_id}`:a.kind==='list_states'?`Read entity states`:'Home Assistant conversation';
   const data={title:'Anna Home Assistant: verification required',message:`Pending: ${summary}. Open the Home Assistant Control Center in Anna to verify. Expires in 2 minutes.`};
   if(cfg.approvalLink){
     try{const u=new URL(cfg.approvalLink);if(u.protocol==='https:'&&u.hostname==='anna.partners')data.data={actions:[{action:'URI',title:'Review in Anna',uri:u.href}]} }catch{}
@@ -172,7 +193,7 @@ async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch, store
         else if(method==='pin'||method==='totp') await approval.verifyCode(store,cfg,method,requiredString(args.code,'code',16));
         else throw new InputError('Choose pin, totp, or passkey');
         const result=await approval.consumeApproved(store,id,a=>{
-          const category=a.kind==='service'?validService(a).category:validEvent(a).category;
+          const category=a.kind==='service'?validService(a).category:a.kind==='event'?'events':a.kind==='converse'?'assist':'other_read';
           if(modeFor(cfg.policy,category)!=='verify')throw new InputError('Approval cancelled: effective permission policy changed');
           return executeAction(cfg,a,fetcher);
         });
@@ -184,29 +205,43 @@ async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch, store
       }
       case 'get_state': {
         const id=entityId(args.entity_id);
-        authorize(cfg,isSensor(id)?'sensor_read':'other_read');
-        const state=await request(cfg,`/api/states/${encodeURIComponent(id)}`,'GET',undefined,fetcher);
-        return ok({entity_id:state.entity_id,state:state.state,attributes:state.attributes||{},last_changed:state.last_changed,last_updated:state.last_updated});
+        const category=isSensor(id)?'sensor_read':'other_read';
+        const mode=modeFor(cfg.policy,category);
+        if(mode==='disabled')throw new InputError('PERMISSION_DISABLED: '+category);
+        if(mode==='verify' && category==='other_read'){
+          const receipt=await approval.createPending(store,{kind:'read_state',entity_id:id});
+          await phoneNotice(cfg,receipt,fetcher);
+          return fail('VERIFICATION_REQUIRED: approve in Control Center',receipt);
+        }
+        return ok(await executeAction(cfg,{kind:'read_state',entity_id:id},fetcher));
       }
       case 'list_states': {
         const domain=args.domain===undefined?'':part(args.domain,'domain');
         const limit=args.limit===undefined?50:args.limit;
         if(!Number.isInteger(limit)||limit<1||limit>100) throw new InputError('limit must be 1–100');
-        if(domain && domain!=='sensor' && domain!=='binary_sensor')authorize(cfg,'other_read');
-        const includeOther=!domain && modeFor(cfg.policy,'other_read')==='enabled';
-        const states=await request(cfg,'/api/states','GET',undefined,fetcher);
-        if(!Array.isArray(states))throw new UpstreamError('Unexpected Home Assistant states response');
-        const items=states.filter(s=>s&&typeof s.entity_id==='string'&&(!domain||s.entity_id.startsWith(domain+'.'))&&(includeOther||isSensor(s.entity_id)||(domain && domain!=='sensor'&&domain!=='binary_sensor')));
-        return ok({count:items.length,returned:Math.min(items.length,limit),entities:items.slice(0,limit).map(s=>({entity_id:s.entity_id,name:s.attributes?.friendly_name||s.entity_id,state:s.state,unit:s.attributes?.unit_of_measurement||null,last_changed:s.last_changed||null}))});
+        const other=modeFor(cfg.policy,'other_read');
+        const wantsOther=domain!=='sensor'&&domain!=='binary_sensor';
+        if(wantsOther && other==='verify'){
+          const receipt=await approval.createPending(store,{kind:'list_states',domain,limit,authorized_all:true});
+          await phoneNotice(cfg,receipt,fetcher);
+          return fail('VERIFICATION_REQUIRED: approve in Control Center',receipt);
+        }
+        if(domain && wantsOther && other==='disabled')throw new InputError('PERMISSION_DISABLED: other_read');
+        return ok(await executeAction(cfg,{kind:'list_states',domain,limit},fetcher));
       }
       case 'converse': {
-        authorize(cfg,'assist');
         const text=requiredString(args.text,'text',4000);
         const body={text,language:'en'};
         if(args.agent_id!==undefined)body.agent_id=requiredString(args.agent_id,'agent_id',180);
         if(args.conversation_id!==undefined)body.conversation_id=requiredString(args.conversation_id,'conversation_id',180);
-        const data=await request(cfg,'/api/conversation/process','POST',body,fetcher);
-        return ok({text:String(data.response?.speech?.plain?.speech||''),conversation_id:data.conversation_id||'',response_type:data.response?.response_type||''});
+        const mode=modeFor(cfg.policy,'assist');
+        if(mode==='disabled')throw new InputError('PERMISSION_DISABLED: assist');
+        if(mode==='verify'){
+          const receipt=await approval.createPending(store,{kind:'converse',body});
+          await phoneNotice(cfg,receipt,fetcher);
+          return fail('VERIFICATION_REQUIRED: approve in Control Center',receipt);
+        }
+        return ok(await executeAction(cfg,{kind:'converse',body},fetcher));
       }
       case 'call_service': {
         const {category,action}=validService(args);
