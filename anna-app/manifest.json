@@ -1,0 +1,64 @@
+{
+  "schema": 4,
+  "required_executas": [
+    {
+      "tool_id": "bundled:home-assistant",
+      "version": "latest"
+    }
+  ],
+  "optional_executas": [],
+  "system_prompt_addendum": "The Home Assistant Executa allows sensor reads by default. All other access is disabled until the user configures policy in Anna Executa credentials. The Control Center stores policy drafts, not active authorization. Never claim that a draft enabled a command. A PIN-selected action fails closed while PIN approvals are unimplemented.",
+  "tags": [
+    "home-assistant",
+    "smarthome",
+    "security",
+    "executa",
+    "configuration"
+  ],
+  "ui": {
+    "bundle": {
+      "format": "static-spa",
+      "entry": "index.html",
+      "external_origins": []
+    },
+    "views": [
+      {
+        "name": "main",
+        "title": "Home Assistant Control Center",
+        "default": true,
+        "entry": "index.html",
+        "min_size": {
+          "w": 380,
+          "h": 500
+        },
+        "default_size": {
+          "w": 610,
+          "h": 840
+        },
+        "max_size": {
+          "w": 1200,
+          "h": 1400
+        },
+        "resizable": true,
+        "movable": true,
+        "single_instance": true
+      }
+    ],
+    "csp_overrides": {
+      "img-src": [
+        "'self'",
+        "data:"
+      ],
+      "script-src": [
+        "'self'"
+      ],
+      "style-src": [
+        "'self'"
+      ]
+    },
+    "state_merge": "last_writer_wins"
+  },
+  "dev": {
+    "user_id": 1
+  }
+}
