@@ -60,7 +60,9 @@ function config(context={}) {
   const val = k => c[k] ?? (dev ? process.env[k] : undefined);
   const token = requiredString(val('HA_TOKEN'),'HA_TOKEN',4096);
   const url = safeBase(val('HA_URL'),parseBool(val('HA_ALLOW_LOCAL_HTTP')));
-  const policy=normalizePolicy(val('HA_POLICY_JSON'));
+  let policy;
+  try { policy=normalizePolicy(val('HA_POLICY_JSON')); }
+  catch(e) { throw new InputError(e.message); }
   return {url, token, policy, pin_configured:typeof val('HA_APPROVAL_PIN')==='string' && val('HA_APPROVAL_PIN').length>=6};
 }
 function entityId(s) {const id=requiredString(s,'entity_id',200); if(!ID.test(id))throw new InputError('Invalid Home Assistant entity_id');return id;}
