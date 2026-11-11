@@ -4,7 +4,9 @@ const assert=require('node:assert/strict');
 const {spawn}=require('node:child_process');
 const {handle,invoke,safeBase,isPrivateIPv4}=require('../src/main');
 const creds={credentials:{HA_URL:'https://ha.example.net:8123',HA_TOKEN:'fake-secret-test-only'}};
-const control={credentials:{...creds.credentials,HA_ENABLE_CONTROL:'true'}};
+const control={credentials:{...creds.credentials,HA_POLICY_JSON:JSON.stringify({lights:'enabled',events:'enabled'})}};
+const assist={credentials:{...creds.credentials,HA_POLICY_JSON:JSON.stringify({assist:'enabled'})}};
+const extendedRead={credentials:{...creds.credentials,HA_POLICY_JSON:JSON.stringify({other_read:'enabled'})}};
 function mock(value,status=200){return async (_url,opts)=>({ok:status>=200&&status<300,status,text:async()=>JSON.stringify(value),opts});}
 
 test('describe returns Anna-compatible manifest and credentials',async()=>{
@@ -46,13 +48,13 @@ test('get_state hits only requested entity',async()=>{
 });
 test('list_states filters and limits',async()=>{
   const all=[{entity_id:'light.a',state:'on'},{entity_id:'sensor.x',state:'15'},{entity_id:'light.b',state:'off'}];
-  const r=await invoke('list_states',{domain:'light',limit:1},creds,mock(all));
+  const r=await invoke('list_states',{domain:'light',limit:1},extendedRead,mock(all));
   assert.equal(r.data.count,2);assert.equal(r.data.returned,1);
   assert.equal(r.data.entities[0].entity_id,'light.a');
 });
 test('converse posts text and retains conversation id',async()=>{
   let posted;
-  const r=await invoke('converse',{text:'Turn lights on',conversation_id:'abc'},creds,async (_u,o)=>{
+  const r=await invoke('converse',{text:'Turn lights on',conversation_id:'abc'},assist,async (_u,o)=>{
     posted=JSON.parse(o.body);return mock({response:{speech:{plain:{speech:'Done'}}},conversation_id:'xyz'})();
   });
   assert.deepEqual(posted,{text:'Turn lights on',language:'en',conversation_id:'abc'});
@@ -72,7 +74,7 @@ test('safe service succeeds only if explicitly enabled',async()=>{
 test('dangerous services blocked even when control enabled',async()=>{
   for(const [domain,service,id] of [['lock','unlock','lock.door'],['alarm_control_panel','alarm_disarm','alarm.house'],['cover','open_cover','cover.garage']]) {
     const r=await invoke('call_service',{domain,service,entity_id:id},control);
-    assert.match(r.error,/allowlist/);
+    assert.match(r.error,/disabled|allowlist/);
   }
 });
 test('entity_id must match service domain',async()=>{
@@ -103,4 +105,36 @@ test('stdio process returns two requests without exiting between them',async()=>
   child.stdin.end();await new Promise(resolve=>child.on('close',resolve));
   const frames=out.trim().split('\n').map(JSON.parse);
   assert.equal(frames.length,2);assert.equal(frames[0].id,1);assert.equal(frames[1].id,2);
+});
+
+
+test('sensor and binary_sensor readable by default, other states blocked',async()=>{
+  const sensor=await invoke('get_state',{entity_id:'binary_sensor.motion'},creds,mock({entity_id:'binary_sensor.motion',state:'on',attributes:{}}));
+  assert.equal(sensor.success,true);
+  const locked=await invoke('get_state',{entity_id:'lock.front_door'},creds,mock({}));
+  assert.equal(locked.success,false);assert.match(locked.error,/PERMISSION_DISABLED/);
+});
+test('unfiltered list hides non-sensor states until explicit opt-in',async()=>{
+  const all=[{entity_id:'sensor.x',state:'1'},{entity_id:'lock.a',state:'locked'},{entity_id:'binary_sensor.motion',state:'off'}];
+  const r=await invoke('list_states',{},creds,mock(all));
+  assert.equal(r.data.count,2);
+  assert.deepEqual(r.data.entities.map(x=>x.entity_id),['sensor.x','binary_sensor.motion']);
+});
+test('PIN mode fails closed instead of executing a command',async()=>{
+  let called=false;
+  const pinCtx={credentials:{...creds.credentials,HA_POLICY_JSON:JSON.stringify({locks:'pin'})}};
+  const r=await invoke('call_service',{domain:'lock',service:'unlock',entity_id:'lock.front_door'},pinCtx,async()=>{called=true;return mock([])();});
+  assert.equal(r.success,false);
+  assert.match(r.error,/PIN_REQUIRED/);
+  assert.equal(called,false);
+});
+test('explicit enable permits locks while disabled is the default',async()=>{
+  const enabled={credentials:{...creds.credentials,HA_POLICY_JSON:JSON.stringify({locks:'enabled'})}};
+  const r=await invoke('call_service',{domain:'lock',service:'unlock',entity_id:'lock.front_door'},enabled,mock([]));
+  assert.equal(r.success,true);
+});
+test('unsafe policy JSON is rejected fail closed',async()=>{
+  const ctx={credentials:{...creds.credentials,HA_POLICY_JSON:JSON.stringify({lights:'enabled',unknown:'enabled'})}};
+  const r=await invoke('call_service',{domain:'light',service:'turn_on',entity_id:'light.a'},ctx,mock([]));
+  assert.equal(r.success,false);assert.match(r.error,/Unknown permission/);
 });
