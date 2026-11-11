@@ -12,14 +12,14 @@ test("sensor reads default enabled, all other access disabled",()=>{
 test("locks, covers and security recommend PIN but default to disabled",()=>{
  for(const key of ["locks","covers","security"]){
    const item=PERMISSIONS.find(x=>x.key===key);
-   assert.equal(item.recommend,"pin");
+   assert.equal(item.recommend,"verify");
    assert.equal(DEFAULT[key],"disabled");
  }
 });
 test("all categories support tri-state policy (except fixed sensor read)",()=>{
- const policy=normalize({locks:"enabled",lights:"pin",events:"disabled"});
+ const policy=normalize({locks:"enabled",lights:"verify",events:"disabled"});
  assert.equal(policy.locks,"enabled");
- assert.equal(policy.lights,"pin");
+ assert.equal(policy.lights,"verify");
  assert.equal(policy.events,"disabled");
  assert.equal(policy.sensor_read,"enabled");
 });
