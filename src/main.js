@@ -38,7 +38,7 @@ function safeBase(raw, allowLocalHTTP) {
     throw new InputError('HA_URL must contain only scheme, hostname and optional port (no credentials/path/query)');
   }
   const host=url.hostname.toLowerCase();
-  if (!host || host === 'localhost' || host === 'localhost.' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.endsWith('.localhost')) {
+  if (!host || host === 'localhost' || host === 'localhost.' || host.startsWith('127.') || host.startsWith('169.254.') || host.startsWith('0.') || host === '0.0.0.0' || host === '[::1]' || host.endsWith('.localhost')) {
     throw new InputError('Loopback and wildcard hosts are not allowed');
   }
   if (url.protocol === 'http:') {
@@ -123,7 +123,7 @@ async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch) {
         const id=entityId(args.entity_id);
         if(!id.startsWith(domain+'.'))throw new InputError('entity_id must belong to the requested domain');
         const data=obj(args.data,'data');
-        if(Object.hasOwn(data,'entity_id')||Object.hasOwn(data,'target'))throw new InputError('Put the target in entity_id, not data');
+        if(['entity_id','target','area_id','device_id'].some(k=>Object.hasOwn(data,k)))throw new InputError('Put the exact target in entity_id; data cannot override targets');
         const result=await request(cfg,`/api/services/${domain}/${service}`,'POST',{...data,entity_id:id},fetcher);
         return ok({executed:true,domain,service,entity_id:id,result_count:Array.isArray(result)?result.length:null});
       }
