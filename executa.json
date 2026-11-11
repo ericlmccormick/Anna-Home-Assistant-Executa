@@ -1,0 +1,36 @@
+{
+  "slug": "home-assistant-connector",
+  "name": "Home Assistant Connector",
+  "version": "0.1.0",
+  "executa_type": "tool",
+  "type": "node",
+  "enabled": true,
+  "description": "Secure, reusable Home Assistant tools for Anna agents and apps.",
+  "runtime": {
+    "requires": {
+      "node": ">=22 <23"
+    },
+    "fallback": "fail"
+  },
+  "distribution": {
+    "active": "local",
+    "profiles": {
+      "local": {
+        "type": "local",
+        "supports_protocol": true
+      },
+      "binary": {
+        "type": "binary",
+        "executable_name": "home-assistant-executa",
+        "supports_protocol": true,
+        "binary_artifacts": {
+          "linux-x86_64": {
+            "path": "dist/home-assistant-executa-0.1.0-linux-x86_64.tar.gz",
+            "entrypoint": "bin/home-assistant-executa",
+            "format": "tar.gz"
+          }
+        }
+      }
+    }
+  }
+}
