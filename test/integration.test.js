@@ -61,8 +61,8 @@ test('converse posts text and retains conversation id',async()=>{
   assert.equal(r.data.text,'Done');assert.equal(r.data.conversation_id,'xyz');
 });
 test('mutations disabled by default',async()=>{
-  assert.match((await invoke('call_service',{domain:'light',service:'turn_on',entity_id:'light.a'},creds)).error,/disabled/);
-  assert.match((await invoke('fire_event',{event_type:'abc'},creds)).error,/disabled/);
+  assert.match((await invoke('call_service',{domain:'light',service:'turn_on',entity_id:'light.a'},creds)).error,/DISABLED/);
+  assert.match((await invoke('fire_event',{event_type:'abc'},creds)).error,/DISABLED/);
 });
 test('safe service succeeds only if explicitly enabled',async()=>{
   let posted;
@@ -74,7 +74,7 @@ test('safe service succeeds only if explicitly enabled',async()=>{
 test('dangerous services blocked even when control enabled',async()=>{
   for(const [domain,service,id] of [['lock','unlock','lock.door'],['alarm_control_panel','alarm_disarm','alarm.house'],['cover','open_cover','cover.garage']]) {
     const r=await invoke('call_service',{domain,service,entity_id:id},control);
-    assert.match(r.error,/disabled|allowlist/);
+    assert.match(r.error,/DISABLED|allowed list/);
   }
 });
 test('entity_id must match service domain',async()=>{
