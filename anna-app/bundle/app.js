@@ -1,5 +1,6 @@
 import { AnnaAppRuntime } from "/static/anna-apps/_sdk/latest/index.js";
 import {PERMISSIONS,DEFAULT,normalize,exportPolicy} from "./policy.mjs";
+import {setupSecurity} from "./security-ui.mjs";
 const $=id=>document.getElementById(id);
 const KEY="ha-control-policy-draft-v1";
 let anna=null,toolId=null,policy={...DEFAULT},activePolicy=null;
@@ -18,7 +19,7 @@ function render(){
   }
   const select=document.createElement("select");select.className="policy-control";
   select.id="perm-"+item.key;select.setAttribute("aria-label",item.label);
-  for(const [value,label] of [["disabled","Disabled"],["enabled","Enabled"],["pin","Require PIN"]]){
+  for(const [value,label] of [["disabled","Disabled"],["enabled","Enabled"],["verify","Verify"]]){
     if(item.fixed && value!=="enabled")continue;
     const o=document.createElement("option");o.value=value;o.textContent=label;select.append(o);
   }
@@ -87,7 +88,7 @@ async function readPolicy(){
   const res=await invoke("get_permissions");
   activePolicy=normalize(res.policy);
   const different=PERMISSIONS.filter(x=>activePolicy[x.key]!==policy[x.key]).length;
-  $("effective-policy").textContent="Executed policy: "+PERMISSIONS.filter(x=>activePolicy[x.key]==="enabled").map(x=>x.label).join(", ")+". "+different+" setting(s) differ from your draft. PIN execution available: "+(res.pin_approval_available?"yes":"no")+".";
+  $("effective-policy").textContent="Executed policy: "+PERMISSIONS.filter(x=>activePolicy[x.key]==="enabled").map(x=>x.label).join(", ")+". "+different+" setting(s) differ from your draft. Verification methods: PIN "+(res.pin_configured?"ready":"not set")+", TOTP "+(res.totp_configured?"ready":"not set")+".";
   status("changes-status",different===0?"Matches active":"Draft differs",different===0?"ok":"muted");
  }catch(e){$("effective-policy").textContent="Cannot read active policy: "+e.message;}
 }
@@ -98,3 +99,4 @@ $("connection-test").addEventListener("click",testConnection);
 $("refresh-policy").addEventListener("click",readPolicy);
 try{anna=await AnnaAppRuntime.connect();}catch{notice("Preview mode outside Anna. You can edit and export a policy draft; connection tests require Anna.");}
 await loadDraft();
+setupSecurity({invoke,notice});
