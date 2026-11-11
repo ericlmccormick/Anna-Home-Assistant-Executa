@@ -1,6 +1,6 @@
 'use strict';
 
-const MODES=Object.freeze(['disabled','enabled','pin']);
+const MODES=Object.freeze(['disabled','enabled','verify','pin']);
 const DESCRIPTORS=Object.freeze([
   {key:'sensor_read',label:'Read sensors',detail:'Sensor and binary_sensor states; no separate approval.',default:'enabled',fixed:true},
   {key:'other_read',label:'Read other devices',detail:'Includes locks, presence, covers, alarms, and other state information.',default:'disabled'},
@@ -12,9 +12,9 @@ const DESCRIPTORS=Object.freeze([
   {key:'scenes',label:'Scenes',detail:'A scene may indirectly trigger sensitive automations.',default:'disabled'},
   {key:'automations',label:'Automations',detail:'Can indirectly control locks, doors or alarms.',default:'disabled'},
   {key:'scripts',label:'Scripts',detail:'Scripts may contain arbitrary Home Assistant actions.',default:'disabled'},
-  {key:'covers',label:'Doors, covers and garage',detail:'Opening or closing a cover may open a garage or door.',default:'disabled',recommended:'pin'},
-  {key:'locks',label:'Locks',detail:'Lock and unlock operations.',default:'disabled',recommended:'pin'},
-  {key:'security',label:'Security systems',detail:'Arm or disarm alarms.',default:'disabled',recommended:'pin'},
+  {key:'covers',label:'Doors, covers and garage',detail:'Opening or closing a cover may open a garage or door.',default:'disabled',recommended:'verify'},
+  {key:'locks',label:'Locks',detail:'Lock and unlock operations.',default:'disabled',recommended:'verify'},
+  {key:'security',label:'Security systems',detail:'Arm or disarm alarms.',default:'disabled',recommended:'verify'},
   {key:'events',label:'Custom events',detail:'Events can trigger automations with physical effects.',default:'disabled'}
 ]);
 const DEFAULT_POLICY=Object.freeze(Object.fromEntries(DESCRIPTORS.map(d=>[d.key,d.default])));
@@ -31,8 +31,8 @@ function normalizePolicy(input){
   for(const [key,val] of Object.entries(raw)){
     if(!Object.hasOwn(DEFAULT_POLICY,key))throw new TypeError('Unknown permission: '+key);
     if(key==='sensor_read' && val!=='enabled')throw new TypeError('Sensor reading is always enabled in this preview');
-    if(!MODES.includes(val))throw new TypeError('Invalid mode for '+key+': expected disabled, enabled, or pin');
-    policy[key]=val;
+    if(!MODES.includes(val))throw new TypeError('Invalid mode for '+key+': expected disabled, enabled, or verify');
+    policy[key]=val==='pin'?'verify':val;
   }
   return policy;
 }
