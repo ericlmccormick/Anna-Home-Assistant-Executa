@@ -61,7 +61,7 @@ function config(context={}) {
   const token = requiredString(val('HA_TOKEN'),'HA_TOKEN',4096);
   const url = safeBase(val('HA_URL'),parseBool(val('HA_ALLOW_LOCAL_HTTP')));
   const policy=normalizePolicy(val('HA_POLICY_JSON'));
-  return {url, token, policy};
+  return {url, token, policy, pin_configured:typeof val('HA_APPROVAL_PIN')==='string' && val('HA_APPROVAL_PIN').length>=6};
 }
 function entityId(s) {const id=requiredString(s,'entity_id',200); if(!ID.test(id))throw new InputError('Invalid Home Assistant entity_id');return id;}
 function part(s,name) {const v=requiredString(s,name,80);if(!PART.test(v))throw new InputError(`Invalid ${name}`);return v;}
@@ -99,6 +99,9 @@ async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch) {
   try {
     cfg=config(context);
     switch(tool) {
+      case 'get_permissions': {
+        return ok({policy:cfg.policy,pin_configured:cfg.pin_configured,pin_approval_available:false,source:'anna_executa_credentials'});
+      }
       case 'test_connection': {
         const c=await request(cfg,'/api/config','GET',undefined,fetcher);
         return ok({connected:true,name:String(c.location_name||'Home Assistant').slice(0,100),version:c.version||null});
