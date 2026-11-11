@@ -1,7 +1,7 @@
 {
   "slug": "home-assistant-connector",
   "name": "Home Assistant Connector",
-  "version": "0.2.0-alpha.1",
+  "version": "0.3.0-alpha.1",
   "executa_type": "tool",
   "type": "node",
   "enabled": true,
@@ -25,7 +25,7 @@
         "supports_protocol": true,
         "binary_artifacts": {
           "linux-x86_64": {
-            "path": "dist/home-assistant-executa-0.2.0-alpha.1-linux-x86_64.tar.gz",
+            "path": "dist/home-assistant-executa-0.3.0-alpha.1-linux-x86_64.tar.gz",
             "entrypoint": "bin/home-assistant-executa",
             "format": "tar.gz"
           }
