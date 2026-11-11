@@ -1,6 +1,6 @@
 {
   "name": "anna-home-assistant-executa",
-  "version": "0.2.0-alpha.1",
+  "version": "0.3.0-alpha.1",
   "private": true,
   "description": "Anna Executa integration for Home Assistant",
   "main": "src/main.js",
@@ -12,5 +12,8 @@
     "test": "node --test test/*.test.js",
     "build": "bash scripts/build.sh"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@simplewebauthn/server": "13.3.3"
+  }
 }
