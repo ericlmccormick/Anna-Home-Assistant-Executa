@@ -1,0 +1,12 @@
+{
+  "name": "home-assistant-executa",
+  "version": "0.1.0",
+  "runtime": {
+    "binary": {
+      "entrypoint": "bin/home-assistant-executa",
+      "permissions": {
+        "bin/home-assistant-executa": "0o755"
+      }
+    }
+  }
+}
