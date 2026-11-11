@@ -124,3 +124,29 @@ test('an approval is rejected if the user disables a category after queuing it',
    disabled,async()=>{called=true;return fetcher()},store);
  assert.equal(result.success,false);assert.match(result.error,/policy changed/);assert.equal(called,false);
 });
+
+test('Verify mode also gates other entity reads and returns the exact approved state',async()=>{
+ const store=memoryStore(),ctx={credentials:{...credentials,HA_APPROVAL_PIN:'246810',HA_POLICY_JSON:'{"other_read":"verify"}'}};
+ const queued=await invoke('get_state',{entity_id:'lock.front_door'},ctx,fetcher,store);
+ assert.equal(queued.success,false);assert.equal(queued.data.action.kind,'read_state');
+ const r=await invoke('approve_action',{request_id:queued.data.request_id,method:'pin',code:'246810'},ctx,
+  async(_url)=>({ok:true,status:200,text:async()=>JSON.stringify({entity_id:'lock.front_door',state:'locked',attributes:{}})}),store);
+ assert.equal(r.success,true);assert.equal(r.data.entity_id,'lock.front_door');
+});
+test('Verify mode approves HA Assist only after code confirmation',async()=>{
+ const store=memoryStore(),ctx={credentials:{...credentials,HA_APPROVAL_PIN:'246810',HA_POLICY_JSON:'{"assist":"verify"}'}};
+ const queued=await invoke('converse',{text:'Turn on a light'},ctx,fetcher,store);
+ assert.equal(queued.success,false);assert.equal(queued.data.action.body.text,'Turn on a light');
+ const r=await invoke('approve_action',{request_id:queued.data.request_id,method:'pin',code:'246810'},ctx,
+  async(_url,opt)=>({ok:true,status:200,text:async()=>JSON.stringify({response:{speech:{plain:{speech:'Done'}}},conversation_id:'test'})}),store);
+ assert.equal(r.success,true);assert.equal(r.data.text,'Done');
+});
+test('Verify entity list authorizes all domains once while default listing stays sensor only',async()=>{
+ const store=memoryStore(),ctx={credentials:{...credentials,HA_APPROVAL_PIN:'246810',HA_POLICY_JSON:'{"other_read":"verify"}'}};
+ const states=[{entity_id:'sensor.x',state:'24'},{entity_id:'lock.a',state:'locked'}];
+ const mock=async()=>({ok:true,status:200,text:async()=>JSON.stringify(states)});
+ const queued=await invoke('list_states',{},ctx,mock,store);
+ assert.equal(queued.success,false);assert.equal(queued.data.action.authorized_all,true);
+ const approved=await invoke('approve_action',{request_id:queued.data.request_id,method:'pin',code:'246810'},ctx,mock,store);
+ assert.equal(approved.success,true);assert.equal(approved.data.count,2);
+});
