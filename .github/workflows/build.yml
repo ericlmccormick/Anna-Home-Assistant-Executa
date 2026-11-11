@@ -1,7 +1,7 @@
 name: Test and Build Anna Executa
 on:
   push:
-    branches: [main]
+    branches: [main, feature/anna-control-center]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -16,6 +16,7 @@ jobs:
           node-version: '22'
       - run: npm test
       - run: npm run build
+      - run: cd anna-app && npm test && npm run build
       - uses: actions/upload-artifact@v4
         with:
           name: anna-home-assistant-executa-linux-x86_64
