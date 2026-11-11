@@ -1,0 +1,16 @@
+{
+  "name": "anna-home-assistant-executa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Anna Executa integration for Home Assistant",
+  "main": "src/main.js",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node --test test/*.test.js",
+    "build": "bash scripts/build.sh"
+  },
+  "license": "MIT"
+}
