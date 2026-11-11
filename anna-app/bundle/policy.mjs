@@ -9,13 +9,13 @@ export const PERMISSIONS = Object.freeze([
   {key:"scenes",label:"Scenes",detail:"Scenes can indirectly control security devices.",default:"disabled"},
   {key:"automations",label:"Automations",detail:"Automations can trigger arbitrary device actions.",default:"disabled"},
   {key:"scripts",label:"Scripts",detail:"Scripts may control security-sensitive devices.",default:"disabled"},
-  {key:"covers",label:"Garage doors, doors and covers",detail:"Opening/closing covers can give physical access.",default:"disabled",recommend:"pin"},
-  {key:"locks",label:"Door locks",detail:"Lock and unlock.",default:"disabled",recommend:"pin"},
-  {key:"security",label:"Security and alarms",detail:"Arm and disarm security systems.",default:"disabled",recommend:"pin"},
+  {key:"covers",label:"Garage doors, doors and covers",detail:"Opening/closing covers can give physical access.",default:"disabled",recommend:"verify"},
+  {key:"locks",label:"Door locks",detail:"Lock and unlock.",default:"disabled",recommend:"verify"},
+  {key:"security",label:"Security and alarms",detail:"Arm and disarm security systems.",default:"disabled",recommend:"verify"},
   {key:"events",label:"Custom events",detail:"Events may indirectly trigger sensitive automations.",default:"disabled"}
 ]);
 export const DEFAULT=Object.freeze(Object.fromEntries(PERMISSIONS.map(x=>[x.key,x.default])));
-const MODES=["disabled","enabled","pin"];
+const MODES=["disabled","enabled","verify","pin"];
 export function normalize(input){
  if(!input || typeof input!=="object" || Array.isArray(input)) return {...DEFAULT};
  const p={...DEFAULT};
@@ -23,7 +23,7 @@ export function normalize(input){
    if(!Object.hasOwn(DEFAULT,key)) throw new Error("Unknown permission: "+key);
    if(key==="sensor_read" && value!=="enabled") throw new Error("Sensor read must stay enabled");
    if(!MODES.includes(value))throw new Error("Invalid permission mode");
-   p[key]=value;
+   p[key]=value==="pin"?"verify":value;
  }
  return p;
 }
