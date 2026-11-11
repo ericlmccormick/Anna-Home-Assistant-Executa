@@ -1,7 +1,7 @@
 {
   "name": "home-assistant-connector",
   "display_name": "Home Assistant Connector",
-  "version": "0.2.0-dev",
+  "version": "0.2.0-alpha.1",
   "description": "Home Assistant connector with sensor-only default access, per-category disabled/enabled/PIN policy, and a companion Anna settings app preview. PIN actions are blocked until secure approval is implemented.",
   "author": "Eric McCormick",
   "homepage": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
