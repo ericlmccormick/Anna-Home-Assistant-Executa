@@ -97,3 +97,18 @@ test('passkey challenges reject missing auth state and invalid registration',asy
  await assert.rejects(()=>A.beginPasskey(db,'missing'),/expired/);
  await assert.rejects(()=>A.beginEnroll(db,{approvalPin:'654321'},'111111'),/Invalid verification/);
 });
+
+test('passkey registration generates cryptographic challenge with required UV',async()=>{
+ const db=memoryStore();
+ const options=await A.beginEnroll(db,{approvalPin:'654321'},'654321');
+ assert.ok(options.enrollment_id);assert.ok(options.options.challenge.length>=22);
+ assert.equal(options.options.authenticatorSelection.userVerification,'required');
+ await assert.rejects(()=>A.finishEnroll(db,options.enrollment_id,{id:'invalid',type:'public-key',response:{}}),/could not be verified/);
+ const saved=await db.get('security/passkeys');
+ assert.equal(saved.exists,false);
+});
+test('unverified action queue has a bounded pending limit',async()=>{
+ const db=memoryStore();
+ for(let i=0;i<8;i++)await A.createPending(db,{kind:'service',domain:'light',service:'turn_on',entity_id:'light.test'+i,data:{}});
+ await assert.rejects(()=>A.createPending(db,{kind:'service',domain:'light',service:'turn_on',entity_id:'light.last',data:{}}),/Too many pending/);
+});
