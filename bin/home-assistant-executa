@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+: "${ANNA_NODE_EXECUTABLE:?Anna shared Node 22 runtime is required}"
+exec "$ANNA_NODE_EXECUTABLE" "$EXECUTA_HOME/src/main.js" "$@"
