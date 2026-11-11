@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Home Assistant Control Center</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <header class="masthead">
+      <div class="brand"><span class="mark" aria-hidden="true">⌂</span><div><h1>Home Assistant</h1><p>Control Center · Anna OS</p></div></div>
+      <span class="tag">Developer preview</span>
+    </header>
+    <section class="notice" role="status">
+      <strong>Permissions are not live until applied in Executa settings.</strong>
+      <p>This app saves non-secret permission drafts. Export the settings and paste the JSON into <code>HA_POLICY_JSON</code> on Anna's native Executa settings page. PIN-required actions are deliberately blocked until a verified approval workflow is available.</p>
+    </section>
+    <section class="panel" aria-labelledby="connection-title">
+      <div class="section-heading"><div><h2 id="connection-title">Connection</h2><p>Configure your Home Assistant server securely in Anna.</p></div><span id="connection-status" class="status muted">Not checked</span></div>
+      <div class="credential-grid">
+        <div class="credential-item"><span class="credential-label">Home Assistant URL</span><code>HA_URL</code><p>Example: https://your-home-assistant.example</p></div>
+        <div class="credential-item"><span class="credential-label">Access token</span><code>HA_TOKEN</code><p>Stored as a sensitive Executa credential, not in this App.</p></div>
+        <div class="credential-item"><span class="credential-label">Approval PIN</span><code>HA_APPROVAL_PIN</code><p>Reserved for the future secure approval mechanism.</p></div>
+      </div>
+      <div class="actions">
+        <a class="button primary" href="https://anna.partners/executa" target="_blank" rel="noopener noreferrer">Open Anna Executa settings</a>
+        <button id="connection-test" class="button" type="button">Test connection</button>
+      </div>
+      <p class="small">Anna's current App API does not expose secure credential writes. Enter URL, token, and any reserved PIN only through Anna's own Executa credential form.</p>
+    </section>
+    <section class="panel" aria-labelledby="permissions-title">
+      <div class="section-heading"><div><h2 id="permissions-title">Access permissions</h2><p>Choose the access level for each operation.</p></div><span id="changes-status" class="status muted">Defaults</span></div>
+      <div class="legend">
+        <span><i class="dot off"></i>Disabled</span>
+        <span><i class="dot on"></i>Enabled</span>
+        <span><i class="dot pin"></i>Require PIN</span>
+      </div>
+      <div id="policy-list" class="policy-list"></div>
+      <div class="actions sticky-actions">
+        <button id="save-draft" type="button" class="button">Save draft</button>
+        <button id="copy-json" type="button" class="button primary">Copy policy JSON</button>
+        <button id="reset" type="button" class="button">Reset defaults</button>
+      </div>
+      <p class="small">Selecting <b>PIN</b> prevents the Executa from running the action in this preview. It does <em>not</em> enable PIN-based execution yet. For security-sensitive controls, PIN is the recommended choice once the approval protocol is implemented.</p>
+    </section>
+    <section class="panel" aria-labelledby="effective-title">
+      <div class="section-heading"><div><h2 id="effective-title">Active policy</h2><p>Compare your draft with the live Executa credentials.</p></div></div>
+      <div class="actions"><button id="refresh-policy" class="button" type="button">Read Executa policy</button></div>
+      <p id="effective-policy" class="small muted" aria-live="polite">Not read yet. An Anna Agent connection is required.</p>
+    </section>
+    <section class="panel" aria-labelledby="steps-title">
+      <h2 id="steps-title">Apply these settings</h2>
+      <ol>
+        <li>Install and enable this App's bundled Home Assistant Executa.</li>
+        <li>Open Anna Executa settings and enter <code>HA_URL</code> and <code>HA_TOKEN</code>.</li>
+        <li>Select your access rules above, then click <b>Copy policy JSON</b>.</li>
+        <li>Paste into the Executa's <code>HA_POLICY_JSON</code> credential and save.</li>
+        <li>Use <b>Read Executa policy</b> to verify the effective settings.</li>
+      </ol>
+    </section>
+    <p id="message" class="message" role="status" aria-live="polite"></p>
+    <footer>Home Assistant Control Center v0.1.0 · No credentials are stored in the App.</footer>
+  </main>
+  <script src="anna-tool-ids.js" defer></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
