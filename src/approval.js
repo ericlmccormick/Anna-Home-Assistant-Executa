@@ -29,7 +29,7 @@ function actionDetail(action){
  if(action.kind==='service')return {kind:'service',domain:action.domain,service:action.service,entity_id:action.entity_id,data:action.data};
  if(action.kind==='event')return {kind:'event',event_type:action.event_type,event_data:action.event_data};
  if(action.kind==='read_state')return {kind:'read_state',entity_id:action.entity_id};
- if(action.kind==='list_states')return {kind:'list_states',domain:action.domain,limit:action.limit};
+ if(action.kind==='list_states')return {kind:'list_states',domain:action.domain,limit:action.limit,authorized_all:action.authorized_all===true};
  if(action.kind==='converse')return {kind:'converse',body:action.body};
  throw new ApprovalError('Unsupported action kind');
 }
