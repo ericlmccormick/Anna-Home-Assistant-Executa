@@ -14,18 +14,18 @@
       <span class="tag">Developer preview</span>
     </header>
     <section class="notice" role="status">
-      <strong>Permissions are not live until applied in Executa settings.</strong>
-      <p>This app saves non-secret permission drafts. Export the settings and paste the JSON into <code>HA_POLICY_JSON</code> on Anna's native Executa settings page. PIN-required actions are deliberately blocked until a verified approval workflow is available.</p>
+      <strong>Permissions and verification require an online Anna Agent.</strong>
+      <p>This app saves non-secret permission drafts. Export the settings and paste the JSON into <code>HA_POLICY_JSON</code> on Anna's native Executa settings page. Verified actions use a short-lived approval queue. PIN and authenticator codes are entered in this interface, and passkeys work only when Anna's browser supports WebAuthn. All secrets are configured through Anna's native Executa settings.</p>
     </section>
     <section class="panel" aria-labelledby="connection-title">
       <div class="section-heading"><div><h2 id="connection-title">Connection</h2><p>Configure your Home Assistant server securely in Anna.</p></div><span id="connection-status" class="status muted">Not checked</span></div>
       <div class="credential-grid">
         <div class="credential-item"><span class="credential-label">Home Assistant URL</span><code>HA_URL</code><p>Example: https://your-home-assistant.example</p></div>
         <div class="credential-item"><span class="credential-label">Access token</span><code>HA_TOKEN</code><p>Stored as a sensitive Executa credential, not in this App.</p></div>
-        <div class="credential-item"><span class="credential-label">Approval PIN</span><code>HA_APPROVAL_PIN</code><p>Reserved for the future secure approval mechanism.</p></div>
+        <div class="credential-item"><span class="credential-label">Approval PIN / Passkey enrollment</span><code>HA_APPROVAL_PIN</code><p>6–12 digits, configured in native Executa credentials.</p></div>
       </div>
       <div class="actions">
-        <a class="button primary" href="https://anna.partners/executa" target="_blank" rel="noopener noreferrer">Open Anna Executa settings</a>
+        <span class="small">In Anna: Advanced → Executa → Home Assistant Connector → Credentials</span>
         <button id="connection-test" class="button" type="button">Test connection</button>
       </div>
       <p class="small">Anna's current App API does not expose secure credential writes. Enter URL, token, and any reserved PIN only through Anna's own Executa credential form.</p>
@@ -35,7 +35,7 @@
       <div class="legend">
         <span><i class="dot off"></i>Disabled</span>
         <span><i class="dot on"></i>Enabled</span>
-        <span><i class="dot pin"></i>Require PIN</span>
+        <span><i class="dot pin"></i>Verify</span>
       </div>
       <div id="policy-list" class="policy-list"></div>
       <div class="actions sticky-actions">
@@ -43,7 +43,53 @@
         <button id="copy-json" type="button" class="button primary">Copy policy JSON</button>
         <button id="reset" type="button" class="button">Reset defaults</button>
       </div>
-      <p class="small">Selecting <b>PIN</b> prevents the Executa from running the action in this preview. It does <em>not</em> enable PIN-based execution yet. For security-sensitive controls, PIN is the recommended choice once the approval protocol is implemented.</p>
+      <p class="small">Selecting <b>Verify</b> creates a pending action requiring explicit confirmation in this Control Center. PIN and TOTP codes can be used when configured. Passkeys depend on Anna's WebAuthn browser permissions. Assist, scripts, scenes, automations and custom events may indirectly control other devices.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="verification-title">
+      <div class="section-heading"><div><h2 id="verification-title">Identity verification</h2>
+      <p>Use this Control Center to approve a specific pending operation. Codes are never saved by the App.</p></div></div>
+      <p id="security-methods" class="small" aria-live="polite">Checking configured methods…</p>
+      <div class="credential-grid">
+        <div class="credential-item">
+          <span class="credential-label">Passkey (recommended)</span>
+          <p>Biometrics or device unlock through WebAuthn. Requires Anna to allow WebAuthn in its embedded App.</p>
+        </div>
+        <div class="credential-item">
+          <span class="credential-label">Authenticator code</span>
+          <p>30-second rotating TOTP code; configure <code>HA_TOTP_SECRET</code> in native Executa settings.</p>
+        </div>
+        <div class="credential-item">
+          <span class="credential-label">PIN</span>
+          <p>Use <code>HA_APPROVAL_PIN</code>; five failed attempts trigger a 5-minute lockout.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <label for="verification-method">Approval method</label>
+        <select class="policy-control" id="verification-method">
+          <option value="passkey">Passkey / fingerprint / face</option>
+          <option value="totp">Authenticator app code</option>
+          <option value="pin">PIN</option>
+        </select>
+        <label for="verification-code">Code (not needed for passkeys)</label>
+        <input id="verification-code" type="password" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code or PIN" maxlength="12">
+      </div>
+      <div class="actions"><button class="button primary" type="button" id="security-refresh">Refresh pending requests</button></div>
+      <div id="security-pending" class="policy-list" aria-live="polite"></div>
+      <p id="security-status" class="small" aria-live="polite">No approval requests loaded.</p>
+    </section>
+    <section class="panel" aria-labelledby="enrollment-title">
+      <h2 id="enrollment-title">Set up verification</h2>
+      <p class="small">Enter the initial PIN in Anna's native Executa credentials first. You'll use it to register a passkey; no PIN is stored in this App.</p>
+      <div class="actions">
+        <input id="enroll-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Native Executa approval PIN" maxlength="12">
+        <button class="button" type="button" id="enroll-passkey">Register a passkey</button>
+      </div>
+      <p class="small">For an authenticator app, generate an initial Base32 seed locally, add it to your authenticator, and enter that seed into Anna's <code>HA_TOTP_SECRET</code> credential.</p>
+      <div class="actions"><button class="button" type="button" id="generate-totp">Generate authenticator seed</button>
+        <button class="button" type="button" id="clear-totp">Clear seed</button></div>
+      <pre id="totp-seed" class="seed" aria-live="polite"></pre>
+      <p class="small">For phone alerts, enter <code>HA_PHONE_NOTIFY_SERVICE</code> in Executa credentials (e.g. <code>mobile_app_pixel_10_pro</code>). A push notification asks you to open the Control Center; tapping it never approves a command. A direct app link is optional via <code>HA_APPROVAL_LINK</code>.</p>
     </section>
     <section class="panel" aria-labelledby="effective-title">
       <div class="section-heading"><div><h2 id="effective-title">Active policy</h2><p>Compare your draft with the live Executa credentials.</p></div></div>
@@ -57,11 +103,11 @@
         <li>Open Anna Executa settings and enter <code>HA_URL</code> and <code>HA_TOKEN</code>.</li>
         <li>Select your access rules above, then click <b>Copy policy JSON</b>.</li>
         <li>Paste into the Executa's <code>HA_POLICY_JSON</code> credential and save.</li>
-        <li>Use <b>Read Executa policy</b> to verify the effective settings.</li>
+        <li>Use <b>Read Executa policy</b> to verify the effective settings. If Verify is selected, configure a PIN, authenticator secret or passkey and use the approval queue when commands are requested.</li>
       </ol>
     </section>
     <p id="message" class="message" role="status" aria-live="polite"></p>
-    <footer>Home Assistant Control Center v0.1.0 · No credentials are stored in the App.</footer>
+    <footer>Home Assistant Control Center v0.3.0-alpha.1 · No credentials are stored in the App.</footer>
   </main>
   <script src="anna-tool-ids.js" defer></script>
   <script type="module" src="app.js"></script>
