@@ -112,3 +112,15 @@ test('unverified action queue has a bounded pending limit',async()=>{
  for(let i=0;i<8;i++)await A.createPending(db,{kind:'service',domain:'light',service:'turn_on',entity_id:'light.test'+i,data:{}});
  await assert.rejects(()=>A.createPending(db,{kind:'service',domain:'light',service:'turn_on',entity_id:'light.last',data:{}}),/Too many pending/);
 });
+
+test('an approval is rejected if the user disables a category after queuing it',async()=>{
+ const store=memoryStore();
+ const enabled={credentials:{...credentials,HA_APPROVAL_PIN:'246810',HA_POLICY_JSON:'{"locks":"verify"}'}};
+ const req=await invoke('call_service',{domain:'lock',service:'unlock',entity_id:'lock.front_door'},enabled,fetcher,store);
+ assert.equal(req.success,false);
+ let called=false;
+ const disabled={credentials:{...credentials,HA_APPROVAL_PIN:'246810'}};
+ const result=await invoke('approve_action',{request_id:req.data.request_id,method:'pin',code:'246810'},
+   disabled,async()=>{called=true;return fetcher()},store);
+ assert.equal(result.success,false);assert.match(result.error,/policy changed/);assert.equal(called,false);
+});
