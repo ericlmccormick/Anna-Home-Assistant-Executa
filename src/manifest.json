@@ -1,8 +1,8 @@
 {
   "name": "home-assistant-connector",
   "display_name": "Home Assistant Connector",
-  "version": "0.2.0-alpha.1",
-  "description": "Home Assistant connector with sensor-only default access, per-category disabled/enabled/PIN policy, and a companion Anna settings app preview. PIN actions are blocked until secure approval is implemented.",
+  "version": "0.3.0-alpha.1",
+  "description": "Reusable Home Assistant connector with per-category Disabled/Enabled/Verify permissions, secure Anna APS approval queue, PIN/TOTP verification, WebAuthn passkey support where permitted, and optional phone notification links.",
   "author": "Eric McCormick",
   "homepage": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
   "category": "home-automation",
@@ -34,23 +34,44 @@
     {
       "name": "HA_POLICY_JSON",
       "display_name": "Permissions policy (JSON)",
-      "description": "Paste JSON exported from the Home Assistant Control App. Sensor reading always enabled; other actions disabled by default. PIN mode blocks actions until approval support is implemented.",
+      "description": "Nonsecret policy JSON. Modes: disabled, enabled, verify; all except sensors disabled by default. Legacy pin means verify.",
       "required": false,
       "sensitive": false,
       "default": "{}"
     },
     {
       "name": "HA_APPROVAL_PIN",
-      "display_name": "Sensitive actions PIN (reserved)",
-      "description": "Reserved for a future verified approval flow; do not rely on this field yet. PIN-protected operations currently fail closed.",
+      "display_name": "Approval and enrollment PIN (6–12 digits)",
+      "description": "Sensitive native credential; required for PIN approvals and passkey enrollment. Never enter into Anna chat or another app.",
       "required": false,
       "sensitive": true
+    },
+    {
+      "name": "HA_TOTP_SECRET",
+      "display_name": "Authenticator app secret (Base32)",
+      "description": "Optional RFC6238 SHA-1 authenticator seed, configured only in Executa native credentials. Do not put in chat or App persistent storage.",
+      "required": false,
+      "sensitive": true
+    },
+    {
+      "name": "HA_PHONE_NOTIFY_SERVICE",
+      "display_name": "Companion App notification service",
+      "description": "Optional Home Assistant notification service name such as mobile_app_pixel_10_pro (without notify. prefix). Notifications alert but do NOT approve.",
+      "required": false,
+      "sensitive": false
+    },
+    {
+      "name": "HA_APPROVAL_LINK",
+      "display_name": "Open Control Center URL (optional)",
+      "description": "HTTPS anna.partners App window link, if known. Only used in phone notification Open action.",
+      "required": false,
+      "sensitive": false
     }
   ],
   "tools": [
     {
       "name": "get_permissions",
-      "description": "Read active Home Assistant Executa permission modes (never exposes URL, token or PIN); preview includes enabled/disabled/PIN values. PIN modes currently block execution.",
+      "description": "Read effective policy and available configured methods. Does not expose any secret.",
       "parameters": []
     },
     {
@@ -115,7 +136,7 @@
     },
     {
       "name": "call_service",
-      "description": "Control an explicitly permitted device category. Disabled by default; PIN mode is fail-closed pending secure approval support. NEVER infer user consent from this tool.",
+      "description": "Allowed service call on an explicitly enabled category, or create a pending exact-action challenge for Verify mode. Disabled by default. Always require actual user approval for Verify; never invent one.",
       "parameters": [
         {
           "name": "domain",
@@ -145,7 +166,7 @@
     },
     {
       "name": "fire_event",
-      "description": "Fire an event only when event permission is enabled. Disabled by default; PIN mode fails closed.",
+      "description": "Fire event only with enabled policy, otherwise create a pending Verify request. Default disabled.",
       "parameters": [
         {
           "name": "event_type",
@@ -158,6 +179,79 @@
           "type": "object",
           "required": false,
           "description": "Event payload"
+        }
+      ]
+    },
+    {
+      "name": "list_pending",
+      "description": "Show pending verification requests for this user's Home Assistant Executa. Read-only. Do not treat this result as authorization.",
+      "parameters": []
+    },
+    {
+      "name": "begin_passkey_enrollment",
+      "description": "Begin FIDO2 registration from a trusted Control Center UI after user enters the native-credential PIN in a non-LLM form. Never ask for or put a PIN into chat.",
+      "parameters": [
+        {
+          "name": "admin_pin",
+          "type": "string",
+          "required": true,
+          "description": "PIN supplied only by a trusted settings form; never collect it through chat."
+        }
+      ]
+    },
+    {
+      "name": "finish_passkey_enrollment",
+      "description": "Complete signed WebAuthn registration response. Called by Control Center directly, not by an AI agent.",
+      "parameters": [
+        {
+          "name": "enrollment_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "response",
+          "type": "object",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "begin_passkey_approval",
+      "description": "Generate a challenge for an already pending action. An App with WebAuthn support must collect an authenticator signature.",
+      "parameters": [
+        {
+          "name": "request_id",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "approve_action",
+      "description": "Verify PIN/TOTP/WebAuthn evidence from a trusted Control Center and execute only the exact stored pending request once. MUST NOT collect credentials via AI chat.",
+      "parameters": [
+        {
+          "name": "request_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "method",
+          "type": "string",
+          "required": true,
+          "description": "pin, totp, or passkey"
+        },
+        {
+          "name": "code",
+          "type": "string",
+          "required": false,
+          "description": "Code from secure form only, never an LLM chat or tool argument generated by AI"
+        },
+        {
+          "name": "response",
+          "type": "object",
+          "required": false,
+          "description": "Browser WebAuthn signed assertion"
         }
       ]
     }
