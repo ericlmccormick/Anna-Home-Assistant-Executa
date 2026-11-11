@@ -3,6 +3,7 @@
 // Anna Executa JSON-RPC 2.0 over stdio. Zero third-party dependencies.
 const readline = require('node:readline');
 const manifest = require('./manifest.json');
+const {normalizePolicy,modeFor,isSensor,categoryForDomain} = require('./security-policy');
 const ID = /^[a-z][a-z0-9_]*\.[a-z0-9_]+$/;
 const PART = /^[a-z][a-z0-9_]*$/;
 const ALLOWED_SERVICES = Object.freeze({
@@ -12,7 +13,10 @@ const ALLOWED_SERVICES = Object.freeze({
   climate: ['set_temperature','set_hvac_mode'],
   scene: ['turn_on'],
   automation: ['trigger'],
-  script: ['turn_on']
+  script: ['turn_on'],
+  cover: ['open_cover','close_cover','stop_cover'],
+  lock: ['lock','unlock'],
+  alarm_control_panel: ['alarm_arm_home','alarm_arm_away','alarm_disarm']
 });
 
 class InputError extends Error {}
@@ -56,7 +60,8 @@ function config(context={}) {
   const val = k => c[k] ?? (dev ? process.env[k] : undefined);
   const token = requiredString(val('HA_TOKEN'),'HA_TOKEN',4096);
   const url = safeBase(val('HA_URL'),parseBool(val('HA_ALLOW_LOCAL_HTTP')));
-  return {url, token, control:parseBool(val('HA_ENABLE_CONTROL'))};
+  const policy=normalizePolicy(val('HA_POLICY_JSON'));
+  return {url, token, policy};
 }
 function entityId(s) {const id=requiredString(s,'entity_id',200); if(!ID.test(id))throw new InputError('Invalid Home Assistant entity_id');return id;}
 function part(s,name) {const v=requiredString(s,name,80);if(!PART.test(v))throw new InputError(`Invalid ${name}`);return v;}
@@ -83,7 +88,11 @@ async function request(cfg,path,method='GET',body,fetcher=globalThis.fetch) {
   if(!raw)return {};
   try {return JSON.parse(raw);}catch {return {text:raw.slice(0,4000)};}
 }
-function requireControl(cfg) {if(!cfg.control) throw new InputError('Device control disabled. Set HA_ENABLE_CONTROL=true in this Executa’s credentials to enable it.');}
+function authorize(cfg,category) {
+  const mode=modeFor(cfg.policy,category);
+  if(mode==='disabled')throw new InputError(`PERMISSION_DISABLED: ${category} is disabled in Home Assistant connector settings`);
+  if(mode==='pin')throw new InputError(`PIN_REQUIRED: ${category} requires per-command PIN approval; this feature is not yet active in the Anna preview`);
+}
 async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch) {
   if (!args || typeof args!=='object' || Array.isArray(args)) throw new InputError('arguments must be an object');
   let cfg;
@@ -96,6 +105,7 @@ async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch) {
       }
       case 'get_state': {
         const id=entityId(args.entity_id);
+        authorize(cfg,isSensor(id)?'sensor_read':'other_read');
         const state=await request(cfg,`/api/states/${encodeURIComponent(id)}`,'GET',undefined,fetcher);
         return ok({entity_id:state.entity_id,state:state.state,attributes:state.attributes||{},last_changed:state.last_changed,last_updated:state.last_updated});
       }
@@ -103,12 +113,15 @@ async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch) {
         const domain=args.domain===undefined?'':part(args.domain,'domain');
         const limit=args.limit===undefined?50:args.limit;
         if(!Number.isInteger(limit)||limit<1||limit>100) throw new InputError('limit must be 1–100');
+        if(domain && domain!=='sensor' && domain!=='binary_sensor')authorize(cfg,'other_read');
+        const includeOther=!domain && modeFor(cfg.policy,'other_read')==='enabled';
         const states=await request(cfg,'/api/states','GET',undefined,fetcher);
         if(!Array.isArray(states))throw new UpstreamError('Unexpected Home Assistant states response');
-        const items=states.filter(s=>s&&typeof s.entity_id==='string'&&(!domain||s.entity_id.startsWith(domain+'.')));
+        const items=states.filter(s=>s&&typeof s.entity_id==='string'&&(!domain||s.entity_id.startsWith(domain+'.'))&&(includeOther||isSensor(s.entity_id)||(domain && domain!=='sensor'&&domain!=='binary_sensor')));
         return ok({count:items.length,returned:Math.min(items.length,limit),entities:items.slice(0,limit).map(s=>({entity_id:s.entity_id,name:s.attributes?.friendly_name||s.entity_id,state:s.state,unit:s.attributes?.unit_of_measurement||null,last_changed:s.last_changed||null}))});
       }
       case 'converse': {
+        authorize(cfg,'assist');
         const text=requiredString(args.text,'text',4000);
         const body={text,language:'en'};
         if(args.agent_id!==undefined)body.agent_id=requiredString(args.agent_id,'agent_id',180);
@@ -117,8 +130,10 @@ async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch) {
         return ok({text:String(data.response?.speech?.plain?.speech||''),conversation_id:data.conversation_id||'',response_type:data.response?.response_type||''});
       }
       case 'call_service': {
-        requireControl(cfg);
         const domain=part(args.domain,'domain'),service=part(args.service,'service');
+        const category=categoryForDomain(domain);
+        if(!category)throw new InputError('Device domain is not supported');
+        authorize(cfg,category);
         if(!ALLOWED_SERVICES[domain]?.includes(service))throw new InputError('Service is not on the initial safety allowlist');
         const id=entityId(args.entity_id);
         if(!id.startsWith(domain+'.'))throw new InputError('entity_id must belong to the requested domain');
@@ -128,7 +143,7 @@ async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch) {
         return ok({executed:true,domain,service,entity_id:id,result_count:Array.isArray(result)?result.length:null});
       }
       case 'fire_event': {
-        requireControl(cfg);
+        authorize(cfg,'events');
         const type=part(args.event_type,'event_type');
         const data=obj(args.event_data,'event_data');
         const result=await request(cfg,`/api/events/${type}`,'POST',data,fetcher);
@@ -162,4 +177,4 @@ function run() {
   });
 }
 if(require.main===module)run();
-module.exports={handle,invoke,config,safeBase,isPrivateIPv4,request,run,ALLOWED_SERVICES};
+module.exports={handle,invoke,config,safeBase,isPrivateIPv4,request,run,ALLOWED_SERVICES,authorize};
