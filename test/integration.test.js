@@ -11,7 +11,7 @@ function mock(value,status=200){return async (_url,opts)=>({ok:status>=200&&stat
 
 test('describe returns Anna-compatible manifest and credentials',async()=>{
   const r=await handle({jsonrpc:'2.0',id:1,method:'describe'});
-  assert.equal(r.result.version,'0.2.0-alpha.1');
+  assert.equal(r.result.version,'0.3.0-alpha.1');
   assert.ok(r.result.tools.some(t=>t.name==='get_state'));
   assert.ok(r.result.credentials.some(c=>c.name==='HA_TOKEN'&&c.sensitive));
 });
@@ -93,7 +93,7 @@ test('no token leaks on redirect',async()=>{
 });
 test('event uses enabled control',async()=>{
   const r=await invoke('fire_event',{event_type:'anna_request',event_data:{count:1}},control,mock({message:'Event fired'}));
-  assert.equal(r.data.fired,true);
+  assert.equal(r.data.executed,true);
 });
 test('stdio process returns two requests without exiting between them',async()=>{
   const child=spawn(process.execPath,['src/main.js'],{cwd:require('node:path').join(__dirname,'..')});
@@ -125,7 +125,7 @@ test('PIN mode fails closed instead of executing a command',async()=>{
   const pinCtx={credentials:{...creds.credentials,HA_POLICY_JSON:JSON.stringify({locks:'pin'})}};
   const r=await invoke('call_service',{domain:'lock',service:'unlock',entity_id:'lock.front_door'},pinCtx,async()=>{called=true;return mock([])();});
   assert.equal(r.success,false);
-  assert.match(r.error,/PIN_REQUIRED/);
+  assert.match(r.error,/secure approval storage unavailable|Anna v2 required/);
   assert.equal(called,false);
 });
 test('explicit enable permits locks while disabled is the default',async()=>{
