@@ -1,0 +1,15 @@
+{
+  "slug": "home-assistant-control",
+  "name": "Home Assistant Control Center",
+  "version": "0.1.0",
+  "tagline": "Connect Home Assistant and configure exactly which AI actions are allowed.",
+  "description": "Companion settings interface for the Home Assistant Executa. Configure a draft tri-state permission policy and check your secured Home Assistant connection. Credentials remain in Anna's native Executa settings. PIN-protected actions are fail-closed pending a verified approval channel.",
+  "category": "utilities",
+  "homepage_url": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
+  "support_url": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa/issues",
+  "bundled_executas": {
+    "home-assistant": {
+      "path": "./executas/home-assistant"
+    }
+  }
+}
