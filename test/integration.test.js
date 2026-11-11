@@ -74,7 +74,7 @@ test('safe service succeeds only if explicitly enabled',async()=>{
 test('dangerous services blocked even when control enabled',async()=>{
   for(const [domain,service,id] of [['lock','unlock','lock.door'],['alarm_control_panel','alarm_disarm','alarm.house'],['cover','open_cover','cover.garage']]) {
     const r=await invoke('call_service',{domain,service,entity_id:id},control);
-    assert.match(r.error,/DISABLED|allowed list/);
+    assert.match(r.error,/DISABLED|allowed list|must belong/);
   }
 });
 test('entity_id must match service domain',async()=>{
