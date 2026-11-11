@@ -1,4 +1,13 @@
 #!/bin/sh
 set -eu
-: "${ANNA_NODE_EXECUTABLE:?Anna shared Node 22 runtime is required}"
+
+ANNA_NODE_EXECUTABLE=${ANNA_NODE_EXECUTABLE:-/opt/anna/node/bin/node}
+if [ ! -x "$ANNA_NODE_EXECUTABLE" ]; then
+  echo "Anna shared Node 22 runtime is required" >&2
+  exit 1
+fi
+if [ -z "${EXECUTA_HOME:-}" ]; then
+  launcher_path=$(readlink -f -- "$0")
+  EXECUTA_HOME=$(dirname -- "$(dirname -- "$launcher_path")")
+fi
 exec "$ANNA_NODE_EXECUTABLE" "$EXECUTA_HOME/src/main.js" "$@"

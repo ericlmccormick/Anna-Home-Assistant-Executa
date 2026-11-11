@@ -1,6 +1,6 @@
 {
   "name": "anna-home-assistant-executa",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Anna Executa integration for Home Assistant",
   "main": "src/main.js",
