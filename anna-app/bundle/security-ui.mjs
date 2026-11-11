@@ -35,7 +35,13 @@ export function setupSecurity({invoke,notice}){
    for(const p of pending){
     const row=el("div","pending-row");
     const a=p.action||{};
-    row.append(el("strong","",a.kind==="service"?a.domain+"."+a.service+" → "+a.entity_id:"Event: "+a.event_type));
+    row.append(el("strong","",
+      a.kind==="service"?a.domain+"."+a.service+" → "+a.entity_id:
+      a.kind==="event"?"Event: "+a.event_type:
+      a.kind==="read_state"?"Read: "+a.entity_id:
+      a.kind==="list_states"?"Read entity list: "+(a.domain||"all domains"):
+      a.kind==="converse"?"Assist: "+String(a.body?.text||"").slice(0,200):
+      "Unknown request"));
     row.append(el("p","small","Request expires "+new Date(p.expires_at).toLocaleTimeString()));
     const button=el("button","button primary","Review and verify");
     button.type="button";button.addEventListener("click",()=>approve(p.request_id,button));
