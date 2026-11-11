@@ -171,7 +171,11 @@ async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch, store
         if(method==='passkey') await approval.verifyPasskey(store,id,obj(args.response,'response',16000));
         else if(method==='pin'||method==='totp') await approval.verifyCode(store,cfg,method,requiredString(args.code,'code',16));
         else throw new InputError('Choose pin, totp, or passkey');
-        const result=await approval.consumeApproved(store,id,a=>executeAction(cfg,a,fetcher));
+        const result=await approval.consumeApproved(store,id,a=>{
+          const category=a.kind==='service'?validService(a).category:validEvent(a).category;
+          if(modeFor(cfg.policy,category)!=='verify')throw new InputError('Approval cancelled: effective permission policy changed');
+          return executeAction(cfg,a,fetcher);
+        });
         return ok({...result,request_id:id,verified_by:method});
       }
       case 'test_connection': {
