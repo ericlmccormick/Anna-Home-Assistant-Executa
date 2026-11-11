@@ -1,7 +1,7 @@
 {
   "name": "home-assistant-connector",
   "display_name": "Home Assistant Connector",
-  "version": "0.3.0-alpha.1",
+  "version": "0.1.0",
   "description": "Reusable Home Assistant connector with per-category Disabled/Enabled/Verify permissions, secure Anna APS approval queue, PIN/TOTP verification, WebAuthn passkey support where permitted, and optional phone notification links.",
   "author": "Eric McCormick",
   "homepage": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",

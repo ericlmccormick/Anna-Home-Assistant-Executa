@@ -1,6 +1,6 @@
 # Home Assistant for Anna OS — Control Center development branch
 
-> **Branch:** `feature/anna-control-center` · Executa `0.3.0-alpha.1` · Anna companion App `0.3.0-alpha.1`  
+> **Branch:** `feature/anna-control-center` · Executa `0.1.0` · Anna companion App `0.1.0`
 > **Status:** integration preview, not approved for public deployment. `main` and both Pebble projects remain unchanged.
 
 This project provides a reusable Home Assistant Executa and a companion Anna App to configure a per-device-category security policy with PIN, TOTP, and optional WebAuthn passkey verification. It is adapted from [Pebble Home Assistant Bridge](https://github.com/ericlmccormick/Pebble-HA-plug-in).

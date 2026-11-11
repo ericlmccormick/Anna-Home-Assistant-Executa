@@ -19,9 +19,9 @@ jobs:
       - run: npm run build
       - run: cd anna-app && npm test && npm run build
       - name: Package Anna companion App
-        run: tar -C anna-app -czf dist/home-assistant-anna-app-0.3.0-alpha.1.tar.gz app.json manifest.json bundle executas
+        run: tar -C anna-app -czf dist/home-assistant-anna-app-0.1.0.tar.gz app.json manifest.json bundle executas
 
       - uses: actions/upload-artifact@v4
         with:
-          name: anna-home-assistant-0.3.0-alpha.1-preview
+          name: anna-home-assistant-0.1.0-preview
           path: dist/*.tar.gz

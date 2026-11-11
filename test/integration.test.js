@@ -11,7 +11,7 @@ function mock(value,status=200){return async (_url,opts)=>({ok:status>=200&&stat
 
 test('describe returns Anna-compatible manifest and credentials',async()=>{
   const r=await handle({jsonrpc:'2.0',id:1,method:'describe'});
-  assert.equal(r.result.version,'0.3.0-alpha.1');
+  assert.equal(r.result.version,'0.1.0');
   assert.ok(r.result.tools.some(t=>t.name==='get_state'));
   assert.ok(r.result.credentials.some(c=>c.name==='HA_TOKEN'&&c.sensitive));
 });

@@ -1,4 +1,4 @@
-# Home Assistant for Anna — Control Center v0.3.0-alpha.1
+# Home Assistant for Anna — Control Center v0.1.0
 
 **Private development branch only.** The App and Executa can be installed together through Anna's bundled Executa mechanism; live Agent installation is not yet verified.
 

@@ -1,7 +1,7 @@
 {
   "slug": "home-assistant-control",
   "name": "Home Assistant Control Center",
-  "version": "0.3.0-alpha.1",
+  "version": "0.1.0",
   "tagline": "Secure Home Assistant control and identity verification for Anna",
   "description": "Companion Control Center for a bundled Home Assistant Executa: sensor-only defaults, per-category Disabled/Enabled/Verify, PIN and authenticator-code approval, passkey support when enabled by Anna's browser, and optional phone verification notifications. Home Assistant URL and secrets remain in Anna's Executa credential form.",
   "category": "utilities",
