@@ -31,6 +31,8 @@ function actionDetail(action){
  throw new ApprovalError('Unsupported action kind');
 }
 async function createPending(store,action){
+ const existing=await listPending(store);
+ if(existing.length>=8)throw new ApprovalError('Too many pending approvals; finish or wait for existing requests to expire');
  const id=randomUUID();
  const request={id,action:actionDetail(action),created_at:Date.now(),expires_at:Date.now()+REQUEST_TTL_MS,status:'pending'};
  await write(store,'pending/'+id,request,{ttl:180});
