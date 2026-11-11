@@ -1,0 +1,153 @@
+{
+  "name": "home-assistant-connector",
+  "display_name": "Home Assistant Connector",
+  "version": "0.1.0",
+  "description": "Connect Anna agents and apps to your own Home Assistant instance for entity states, Assist conversations, and opt-in device actions.",
+  "author": "Eric McCormick",
+  "homepage": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
+  "category": "home-automation",
+  "icon": "🏠",
+  "license": "MIT",
+  "credentials": [
+    {
+      "name": "HA_URL",
+      "display_name": "Home Assistant URL",
+      "description": "HTTPS base URL, e.g. https://example.home:8123. No path or slash after port.",
+      "required": true,
+      "sensitive": false
+    },
+    {
+      "name": "HA_TOKEN",
+      "display_name": "Home Assistant long-lived access token",
+      "description": "Create in Home Assistant profile. Never share in a conversation.",
+      "required": true,
+      "sensitive": true
+    },
+    {
+      "name": "HA_ENABLE_CONTROL",
+      "display_name": "Enable device control and events",
+      "description": "Set true to allow write operations. Leave false for read-only plus Assist.",
+      "required": false,
+      "sensitive": false,
+      "default": "false"
+    },
+    {
+      "name": "HA_ALLOW_LOCAL_HTTP",
+      "display_name": "Allow insecure local HTTP",
+      "description": "Set true ONLY on a trusted local Agent/LAN. Token will travel unencrypted.",
+      "required": false,
+      "sensitive": false,
+      "default": "false"
+    }
+  ],
+  "tools": [
+    {
+      "name": "test_connection",
+      "description": "Verify the configured Home Assistant URL/token and report server name and version. Does not expose credentials.",
+      "parameters": []
+    },
+    {
+      "name": "get_state",
+      "description": "Read a Home Assistant entity state and attributes by entity_id, e.g. sensor.living_room_temperature.",
+      "parameters": [
+        {
+          "name": "entity_id",
+          "type": "string",
+          "required": true,
+          "description": "Home Assistant entity id such as sensor.temperature"
+        }
+      ]
+    },
+    {
+      "name": "list_states",
+      "description": "List up to 100 Home Assistant entity states, optionally filtered to one domain. Read-only.",
+      "parameters": [
+        {
+          "name": "domain",
+          "type": "string",
+          "required": false,
+          "description": "Optional entity domain such as light, sensor, or switch"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "required": false,
+          "default": 50,
+          "description": "1–100 results"
+        }
+      ]
+    },
+    {
+      "name": "converse",
+      "description": "Send a text request to the configured Home Assistant Assist conversation agent and return its reply. CAUTION: some Assist agents can control devices.",
+      "parameters": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "User's request, maximum 4000 characters"
+        },
+        {
+          "name": "agent_id",
+          "type": "string",
+          "required": false,
+          "description": "Optional Home Assistant conversation agent ID"
+        },
+        {
+          "name": "conversation_id",
+          "type": "string",
+          "required": false,
+          "description": "Optional follow-up conversation ID"
+        }
+      ]
+    },
+    {
+      "name": "call_service",
+      "description": "Opt-in device control. Allowlisted light/switch/fan/climate/scene/automation/script actions only. Automations/scripts may have sensitive effects; ask the user before triggering. Requires HA_ENABLE_CONTROL=true.",
+      "parameters": [
+        {
+          "name": "domain",
+          "type": "string",
+          "required": true,
+          "description": "Service domain"
+        },
+        {
+          "name": "service",
+          "type": "string",
+          "required": true,
+          "description": "Service name"
+        },
+        {
+          "name": "entity_id",
+          "type": "string",
+          "required": true,
+          "description": "Exact target entity ID"
+        },
+        {
+          "name": "data",
+          "type": "object",
+          "required": false,
+          "description": "Optional service fields, excluding target/entity_id"
+        }
+      ]
+    },
+    {
+      "name": "fire_event",
+      "description": "Opt-in Home Assistant event trigger. Events can activate automations with physical effects; ask the user before triggering. Requires HA_ENABLE_CONTROL=true.",
+      "parameters": [
+        {
+          "name": "event_type",
+          "type": "string",
+          "required": true,
+          "description": "Event type, e.g. anna_requested"
+        },
+        {
+          "name": "event_data",
+          "type": "object",
+          "required": false,
+          "description": "Event payload"
+        }
+      ]
+    }
+  ]
+}
