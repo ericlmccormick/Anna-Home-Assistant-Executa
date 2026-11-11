@@ -21,6 +21,7 @@ test('base URL rejects credential leakage and redirections',()=>{
   assert.throws(()=>safeBase('https://ha.example.net/?token=secret',false));
   assert.throws(()=>safeBase('http://ha.example.net',true));
   assert.throws(()=>safeBase('http://192.168.1.2:8123',false));
+  assert.throws(()=>safeBase('https://127.0.0.2:8123',false));
   assert.equal(safeBase('http://192.168.1.2:8123',true),'http://192.168.1.2:8123');
 });
 test('private IPv4 validation rejects invalid hosts',()=>{
@@ -81,6 +82,8 @@ test('entity_id must match service domain',async()=>{
 test('reject data target override',async()=>{
   const r=await invoke('call_service',{domain:'light',service:'turn_on',entity_id:'light.a',data:{entity_id:'lock.front'}},control);
   assert.match(r.error,/target/);
+  const area=await invoke('call_service',{domain:'light',service:'turn_on',entity_id:'light.a',data:{area_id:'whole_house'}},control);
+  assert.match(area.error,/targets/);
 });
 test('no token leaks on redirect',async()=>{
   const r=await invoke('get_state',{entity_id:'sensor.a'},creds,mock({},302));
