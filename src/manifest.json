@@ -1,8 +1,8 @@
 {
   "name": "home-assistant-connector",
   "display_name": "Home Assistant Connector",
-  "version": "0.1.0",
-  "description": "Connect Anna agents and apps to your own Home Assistant instance for entity states, Assist conversations, and opt-in device actions.",
+  "version": "0.2.0-dev",
+  "description": "Home Assistant connector with sensor-only default access, per-category disabled/enabled/PIN policy, and a companion Anna settings app preview. PIN actions are blocked until secure approval is implemented.",
   "author": "Eric McCormick",
   "homepage": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
   "category": "home-automation",
@@ -24,23 +24,35 @@
       "sensitive": true
     },
     {
-      "name": "HA_ENABLE_CONTROL",
-      "display_name": "Enable device control and events",
-      "description": "Set true to allow write operations. Leave false for read-only plus Assist.",
-      "required": false,
-      "sensitive": false,
-      "default": "false"
-    },
-    {
       "name": "HA_ALLOW_LOCAL_HTTP",
       "display_name": "Allow insecure local HTTP",
       "description": "Set true ONLY on a trusted local Agent/LAN. Token will travel unencrypted.",
       "required": false,
       "sensitive": false,
       "default": "false"
+    },
+    {
+      "name": "HA_POLICY_JSON",
+      "display_name": "Permissions policy (JSON)",
+      "description": "Paste JSON exported from the Home Assistant Control App. Sensor reading always enabled; other actions disabled by default. PIN mode blocks actions until approval support is implemented.",
+      "required": false,
+      "sensitive": false,
+      "default": "{}"
+    },
+    {
+      "name": "HA_APPROVAL_PIN",
+      "display_name": "Sensitive actions PIN (reserved)",
+      "description": "Reserved for a future verified approval flow; do not rely on this field yet. PIN-protected operations currently fail closed.",
+      "required": false,
+      "sensitive": true
     }
   ],
   "tools": [
+    {
+      "name": "get_permissions",
+      "description": "Read active Home Assistant Executa permission modes (never exposes URL, token or PIN); preview includes enabled/disabled/PIN values. PIN modes currently block execution.",
+      "parameters": []
+    },
     {
       "name": "test_connection",
       "description": "Verify the configured Home Assistant URL/token and report server name and version. Does not expose credentials.",
@@ -48,7 +60,7 @@
     },
     {
       "name": "get_state",
-      "description": "Read a Home Assistant entity state and attributes by entity_id, e.g. sensor.living_room_temperature.",
+      "description": "Read a sensor or binary_sensor state without additional approval; other domains require other_read permission.",
       "parameters": [
         {
           "name": "entity_id",
@@ -60,7 +72,7 @@
     },
     {
       "name": "list_states",
-      "description": "List up to 100 Home Assistant entity states, optionally filtered to one domain. Read-only.",
+      "description": "List sensors and binary sensors by default. Other entity domains require the other_read policy to be enabled.",
       "parameters": [
         {
           "name": "domain",
@@ -79,7 +91,7 @@
     },
     {
       "name": "converse",
-      "description": "Send a text request to the configured Home Assistant Assist conversation agent and return its reply. CAUTION: some Assist agents can control devices.",
+      "description": "Send a request to Home Assistant Assist only when the assist permission is enabled. Assist can operate devices and is NOT protected from indirect effects.",
       "parameters": [
         {
           "name": "text",
@@ -103,7 +115,7 @@
     },
     {
       "name": "call_service",
-      "description": "Opt-in device control. Allowlisted light/switch/fan/climate/scene/automation/script actions only. Automations/scripts may have sensitive effects; ask the user before triggering. Requires HA_ENABLE_CONTROL=true.",
+      "description": "Control an explicitly permitted device category. Disabled by default; PIN mode is fail-closed pending secure approval support. NEVER infer user consent from this tool.",
       "parameters": [
         {
           "name": "domain",
@@ -133,7 +145,7 @@
     },
     {
       "name": "fire_event",
-      "description": "Opt-in Home Assistant event trigger. Events can activate automations with physical effects; ask the user before triggering. Requires HA_ENABLE_CONTROL=true.",
+      "description": "Fire an event only when event permission is enabled. Disabled by default; PIN mode fails closed.",
       "parameters": [
         {
           "name": "event_type",
