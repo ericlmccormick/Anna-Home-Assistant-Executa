@@ -73,7 +73,7 @@ async function webauthn(){
  return libPromise;
 }
 async function beginEnroll(store,cfg,adminCode){
- if(!validCode(cfg.approvalPin)||!validCode(adminCode)||!constantEquals(cfg.approvalPin,adminCode))throw new ApprovalError('Native Executa approval PIN required to register a passkey');
+ await verifyCode(store,cfg,'pin',adminCode);
  const {generateRegistrationOptions}=await webauthn();
  const existing=await read(store,'security/passkeys');
  const options=await generateRegistrationOptions({rpName:'Home Assistant for Anna',rpID:PASSKEY_RPID,
