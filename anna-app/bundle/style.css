@@ -55,3 +55,5 @@ ol{padding-left:22px;font-size:12px;color:#526677}li{margin:0 0 8px}.message{fon
 .agent-note,.setup details{background:#1e3442;border-color:#355465;color:#c6e0ed}
 .panel a{color:#8ed3ff}
 }
+
+.brand-logo{width:48px;height:48px;object-fit:contain;display:block}.welcome-logo{width:68px;height:68px;object-fit:contain;flex:none;display:block}
