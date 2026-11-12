@@ -1,4 +1,4 @@
-# Home Assistant for Anna — Control Center v0.1.0
+# Home Assistant for Anna — Control Center v0.1.1
 
 **Private development branch only.** The App and Executa can be installed together through Anna's bundled Executa mechanism; live Agent installation is not yet verified.
 
@@ -17,7 +17,7 @@ When a caller requests a Verify-mode service/event:
 
 ## Secure setup
 
-In **Anna → Advanced → Executa → Home Assistant Connector → Credentials**, configure:
+In **Anna → Advanced → Executa → Learned → Home Assistant Connector → Credentials**, configure:
 
 | Executa credential | Use |
 |---|---|

@@ -44,7 +44,7 @@ test("Anna App schema uses bundled Executa with no extra permissions",()=>{
 test("UI includes explicit draft-only warning and does not store credential fields",()=>{
  const html=fs.readFileSync(path.join(root,"bundle/index.html"),"utf8");
  const js=fs.readFileSync(path.join(root,"bundle/app.js"),"utf8");
- assert.match(html,/Permissions and verification require an online Anna Agent/);
+ assert.match(html,/Advanced → Executa → Learned → Home Assistant Connector → Credentials/);
  assert.match(html,/HA_TOKEN/);
  assert.match(html,/HA_POLICY_JSON/);
  assert.match(html,/verification-code/);

@@ -28,3 +28,6 @@ ol{padding-left:22px;font-size:12px;color:#526677}li{margin:0 0 8px}.message{fon
 .seed:empty{display:none}
 #verification-code,#enroll-pin{padding:9px 10px;max-width:205px;border:1px solid #b8cedb;border-radius:8px;background:transparent;color:inherit}
 @media(prefers-color-scheme:dark){.seed{background:#182b37;color:#d9eafa;border-color:#395462}.pending-row{border-color:#314755}}
+
+.setup h3{font-size:14px;margin:16px 0 0}
+.setup ol{font-size:13px;margin:8px 0 0}

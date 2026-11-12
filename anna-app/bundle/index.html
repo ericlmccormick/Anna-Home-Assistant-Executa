@@ -13,22 +13,24 @@
       <div class="brand"><span class="mark" aria-hidden="true">⌂</span><div><h1>Home Assistant</h1><p>Control Center · Anna OS</p></div></div>
       <span class="tag">Developer preview</span>
     </header>
-    <section class="notice" role="status">
-      <strong>Permissions and verification require an online Anna Agent.</strong>
-      <p>This app saves non-secret permission drafts. Export the settings and paste the JSON into <code>HA_POLICY_JSON</code> on Anna's native Executa settings page. Verified actions use a short-lived approval queue. PIN and authenticator codes are entered in this interface, and passkeys work only when Anna's browser supports WebAuthn. All secrets are configured through Anna's native Executa settings.</p>
+    <section class="panel setup" aria-labelledby="setup-title">
+      <h2 id="setup-title">Set up Home Assistant</h2>
+      <ol>
+        <li><strong>Check your Anna Agent.</strong> In Anna, open <b>Agents</b> and confirm the agent you use for chat is online.</li>
+        <li><strong>Open the connector’s credentials.</strong> Click your profile in Anna, then go to <b>Advanced → Executa → Learned → Home Assistant Connector → Credentials</b>.</li>
+        <li><strong>Connect your server.</strong> In the credential form, enter your HTTPS Home Assistant base URL in <code>HA_URL</code> and your long-lived access token in <code>HA_TOKEN</code>. Click <b>Save</b>, then return here and select <b>Test connection</b>.</li>
+      </ol>
+      <h3>Apply permissions</h3>
+      <ol>
+        <li>Choose your access levels below and select <b>Copy policy JSON</b>. Sensor reads are enabled by default. To list lights or check their status, use <b>Other entity states</b>. <b>Lights</b> controls actions such as turning them on or off.</li>
+        <li>Return to the same credential form, paste the JSON into <b>Permissions policy (JSON)</b> (<code>HA_POLICY_JSON</code>), and click <b>Save</b>. Then select <b>Read Executa policy</b> here to confirm. <b>Save draft</b> keeps your edits in Control Center until you apply them in the credential form.</li>
+        <li>If you choose <b>Verify</b>, configure an approval method under <b>Set up verification</b> below. Review and approve pending actions in <b>Identity verification</b>.</li>
+      </ol>
+      <p class="small">Enter your Home Assistant access token only in Anna’s Executa credential form.</p>
     </section>
     <section class="panel" aria-labelledby="connection-title">
-      <div class="section-heading"><div><h2 id="connection-title">Connection</h2><p>Configure your Home Assistant server securely in Anna.</p></div><span id="connection-status" class="status muted">Not checked</span></div>
-      <div class="credential-grid">
-        <div class="credential-item"><span class="credential-label">Home Assistant URL</span><code>HA_URL</code><p>Example: https://your-home-assistant.example</p></div>
-        <div class="credential-item"><span class="credential-label">Access token</span><code>HA_TOKEN</code><p>Stored as a sensitive Executa credential, not in this App.</p></div>
-        <div class="credential-item"><span class="credential-label">Approval PIN / Passkey enrollment</span><code>HA_APPROVAL_PIN</code><p>6–12 digits, configured in native Executa credentials.</p></div>
-      </div>
-      <div class="actions">
-        <span class="small">In Anna: Advanced → Executa → Home Assistant Connector → Credentials</span>
-        <button id="connection-test" class="button" type="button">Test connection</button>
-      </div>
-      <p class="small">Anna's current App API does not expose secure credential writes. Enter URL, token, and any reserved PIN only through Anna's own Executa credential form.</p>
+      <div class="section-heading"><div><h2 id="connection-title">Connection</h2><p>Check whether Anna can reach your Home Assistant server.</p></div><span id="connection-status" class="status muted">Not checked</span></div>
+      <div class="actions"><button id="connection-test" class="button" type="button">Test connection</button></div>
     </section>
     <section class="panel" aria-labelledby="permissions-title">
       <div class="section-heading"><div><h2 id="permissions-title">Access permissions</h2><p>Choose the access level for each operation.</p></div><span id="changes-status" class="status muted">Defaults</span></div>
@@ -96,18 +98,8 @@
       <div class="actions"><button id="refresh-policy" class="button" type="button">Read Executa policy</button></div>
       <p id="effective-policy" class="small muted" aria-live="polite">Not read yet. An Anna Agent connection is required.</p>
     </section>
-    <section class="panel" aria-labelledby="steps-title">
-      <h2 id="steps-title">Apply these settings</h2>
-      <ol>
-        <li>Install and enable this App's bundled Home Assistant Executa.</li>
-        <li>Open Anna Executa settings and enter <code>HA_URL</code> and <code>HA_TOKEN</code>.</li>
-        <li>Select your access rules above, then click <b>Copy policy JSON</b>.</li>
-        <li>Paste into the Executa's <code>HA_POLICY_JSON</code> credential and save.</li>
-        <li>Use <b>Read Executa policy</b> to verify the effective settings. If Verify is selected, configure a PIN, authenticator secret or passkey and use the approval queue when commands are requested.</li>
-      </ol>
-    </section>
     <p id="message" class="message" role="status" aria-live="polite"></p>
-    <footer>Home Assistant Control Center v0.1.0 · No credentials are stored in the App.</footer>
+    <footer>Home Assistant Control Center v0.1.1 · No credentials are stored in the App.</footer>
   </main>
   <script src="anna-tool-ids.js" defer></script>
   <script type="module" src="app.js"></script>
