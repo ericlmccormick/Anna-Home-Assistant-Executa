@@ -37,8 +37,8 @@ test("Anna App schema uses bundled Executa with no extra permissions",()=>{
  const app=JSON.parse(fs.readFileSync(path.join(root,"app.json"),"utf8"));
  const m=JSON.parse(fs.readFileSync(path.join(root,"manifest.json"),"utf8"));
  assert.equal(m.schema,4);
- assert.equal(m.required_executas[0].tool_id,"bundled:home-assistant");
- assert.ok(app.bundled_executas["home-assistant"]);
+ assert.equal(m.required_executas[0].tool_id,"bundled:home-assistant"); // development placeholder: replace with minted tool ID before push
+ assert.equal(app.bundled_executas,undefined); // Anna bundles by published tool_id, not local path
  assert.equal(m.ui.bundle.entry,"index.html");
 });
 test("UI includes explicit draft-only warning and does not store credential fields",()=>{
