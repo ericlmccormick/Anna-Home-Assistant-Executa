@@ -1,7 +1,7 @@
 {
   "name": "home-assistant-connector",
   "display_name": "Home Assistant Connector",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Reusable Home Assistant connector with per-category Disabled/Enabled/Verify permissions, secure Anna APS approval queue, PIN/TOTP verification, WebAuthn passkey support where permitted, and optional phone notification links.",
   "author": "Eric McCormick",
   "homepage": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
@@ -206,12 +206,14 @@
         {
           "name": "enrollment_id",
           "type": "string",
-          "required": true
+          "required": true,
+          "description": "Passkey enrollment ID."
         },
         {
           "name": "response",
           "type": "object",
-          "required": true
+          "required": true,
+          "description": "Signed WebAuthn registration response."
         }
       ]
     },
@@ -222,7 +224,8 @@
         {
           "name": "request_id",
           "type": "string",
-          "required": true
+          "required": true,
+          "description": "Pending action ID."
         }
       ]
     },
@@ -233,7 +236,8 @@
         {
           "name": "request_id",
           "type": "string",
-          "required": true
+          "required": true,
+          "description": "Pending action ID."
         },
         {
           "name": "method",
