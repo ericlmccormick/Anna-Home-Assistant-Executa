@@ -1,4 +1,6 @@
-import { AnnaAppRuntime } from "/static/anna-apps/_sdk/latest/index.js";
+// Load Anna SDK lazily: the onboarding screen still renders when the host or SDK is unavailable.
+let AnnaAppRuntime=null;
+try { ({AnnaAppRuntime}=await import("/static/anna-apps/_sdk/latest/index.js")); } catch { /* standalone preview: no Anna host */ }
 import {PERMISSIONS,DEFAULT,normalize,exportPolicy} from "./policy.mjs";
 import {setupSecurity} from "./security-ui.mjs";
 const $=id=>document.getElementById(id);
@@ -27,7 +29,7 @@ function render(){
   select.addEventListener("change",()=>{
     policy[item.key]=select.value;
     status("changes-status","Unsaved draft","muted");
-    notice("Changes are not active. Save, copy the JSON, and apply it in Executa settings.");
+    notice("Permission draft changed. To activate it, choose Copy Settings and paste into Anna’s Executa credential form.");
   });
   row.append(info,select);list.append(row);
  }
@@ -53,7 +55,7 @@ async function copyPolicy(){
  const output=exportPolicy(policy);
  try{
   await navigator.clipboard.writeText(output);
-  notice("Policy JSON copied. Paste it into HA_POLICY_JSON in Anna Executa settings, then verify the active policy.");
+  notice("Settings copied. Paste into the Permissions policy field in Anna → Executa → Home Assistant Connector → Credentials, then click Read active settings.");
  }catch{
   const textarea=document.createElement("textarea");textarea.value=output;textarea.readOnly=true;textarea.style.width="100%";textarea.rows=10;
   const modal=$("message");modal.replaceChildren(document.createTextNode("Clipboard unavailable. Select and copy the JSON below: "),textarea);
@@ -63,7 +65,7 @@ async function copyPolicy(){
 async function discoverToolId(){
  if(window.__ANNA_TOOL_IDS__?.["home-assistant"])return window.__ANNA_TOOL_IDS__["home-assistant"];
  const tools=await anna.tools.list({});
- const match=(tools?.tools||[]).find(x=>x.tool_name==="get_permissions" || x.plugin_name==="home-assistant-connector");
+ const match=(tools?.tools||[]).find(x=>[x.tool_name,x.plugin_name,x.name].some(name=>["home-assistant-connector","Home Assistant Connector","get_permissions"].includes(name)||String(name||"").includes("home-assistant")));
  return match?.tool_id||null;
 }
 async function invoke(method,args={}){
@@ -81,14 +83,14 @@ async function testConnection(){
   const result=await invoke("test_connection");
   status("connection-status",result.connected?"Connected":"Unavailable",result.connected?"ok":"error");
   notice(result.connected?"Connected to "+(result.name||"Home Assistant")+".":"Unable to connect.");
- }catch(e){status("connection-status","Not connected","error");notice("Connection check: "+e.message);}
+ }catch(e){status("connection-status","Not connected","error");notice("Connection check failed: "+e.message+". Confirm the Agent can access your Home Assistant URL and the access token is valid.");}
 }
 async function readPolicy(){
  try{
   const res=await invoke("get_permissions");
   activePolicy=normalize(res.policy);
   const different=PERMISSIONS.filter(x=>activePolicy[x.key]!==policy[x.key]).length;
-  $("effective-policy").textContent="Executed policy: "+PERMISSIONS.filter(x=>activePolicy[x.key]==="enabled").map(x=>x.label).join(", ")+". "+different+" setting(s) differ from your draft. Verification methods: PIN "+(res.pin_configured?"ready":"not set")+", TOTP "+(res.totp_configured?"ready":"not set")+".";
+  $("effective-policy").textContent="Current permissions: "+PERMISSIONS.filter(x=>activePolicy[x.key]==="enabled").map(x=>x.label).join(", ")+". "+different+" setting(s) differ from your draft. Verification methods: PIN "+(res.pin_configured?"ready":"not set")+", TOTP "+(res.totp_configured?"ready":"not set")+".";
   status("changes-status",different===0?"Matches active":"Draft differs",different===0?"ok":"muted");
  }catch(e){$("effective-policy").textContent="Cannot read active policy: "+e.message;}
 }
@@ -97,6 +99,17 @@ $("copy-json").addEventListener("click",copyPolicy);
 $("reset").addEventListener("click",()=>{policy={...DEFAULT};render();status("changes-status","Unsaved draft");notice("Default access restored in draft: sensors only. Copy and apply the policy to change the Executa.");});
 $("connection-test").addEventListener("click",testConnection);
 $("refresh-policy").addEventListener("click",readPolicy);
-try{anna=await AnnaAppRuntime.connect();}catch{notice("Preview mode outside Anna. You can edit and export a policy draft; connection tests require Anna.");}
+async function connectAnna(){
+ if(!AnnaAppRuntime){
+   notice("Setup preview: the Anna runtime is unavailable. The settings page is still usable, but live tests require installation inside Anna.");
+   return false;
+ }
+ try{
+  anna=await Promise.race([AnnaAppRuntime.connect(),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Anna connection timed out")),9000))]);
+  document.getElementById("runtime-indicator")?.replaceChildren(document.createTextNode("Connected to Anna"));
+  return true;
+ }catch(e){notice("Anna connection unavailable ("+e.message+"). Open this App from Anna's Installed Apps after selecting an online Agent.");return false}
+}
+await connectAnna();
 await loadDraft();
 setupSecurity({invoke,notice});
