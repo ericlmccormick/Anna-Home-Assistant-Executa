@@ -1,7 +1,7 @@
 name: Test and Build Anna Executa
 on:
   push:
-    branches: [main, feature/anna-control-center]
+    branches: [main, feature/anna-control-center, fix/anna-review-2026-11]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -19,9 +19,13 @@ jobs:
       - run: npm run build
       - run: cd anna-app && npm test && npm run build
       - name: Package Anna companion App
-        run: tar -C anna-app -czf dist/home-assistant-anna-app-0.1.1.tar.gz app.json manifest.json bundle executas
+        run: |
+          version=$(node -p 'require("./anna-app/package.json").version')
+          tar -C anna-app -czf "dist/home-assistant-anna-app-${version}.tar.gz" app.json manifest.json bundle executas
 
+      - name: Smoke-test actual cloud distribution package
+        run: bash scripts/smoke-cloud-package.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: anna-home-assistant-0.1.0-preview
+          name: anna-home-assistant-review-0.1.2
           path: dist/*.tar.gz
