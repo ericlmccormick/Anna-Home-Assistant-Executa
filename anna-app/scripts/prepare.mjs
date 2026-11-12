@@ -11,7 +11,14 @@ for(const name of ["main.js","manifest.json","security-policy.js","approval.js",
 const deps=path.join(root,"node_modules");
 if(fs.existsSync(deps))fs.cpSync(deps,path.join(target,"node_modules"),{recursive:true,force:true});
 const executable=JSON.parse(fs.readFileSync(path.join(root,"executa.json"),"utf8"));
-executable.distribution.active="local";
+executable.distribution.active="binary";
+const artifact=executable.distribution.profiles.binary.binary_artifacts["linux-x86_64"];
+if(!artifact?.path)throw new Error("Linux binary distribution is missing");
+const sourceArchive=path.join(root,artifact.path);
+if(!fs.existsSync(sourceArchive))throw new Error("Cloud Agent Linux archive missing; run npm run build at repository root first: "+sourceArchive);
+const targetArchive=path.join(target,artifact.path);
+fs.mkdirSync(path.dirname(targetArchive),{recursive:true});
+fs.copyFileSync(sourceArchive,targetArchive);
 fs.writeFileSync(path.join(target,"executa.json"),JSON.stringify(executable,null,2)+"\n");
 fs.writeFileSync(path.join(target,"plugin.js"),"#!/usr/bin/env node\nrequire('./src/main.js').run();\n");
 fs.writeFileSync(path.join(target,"package.json"),JSON.stringify({name:"anna-home-assistant-executa-app",version:executable.version,private:true,type:"commonjs",main:"plugin.js",bin:{"anna-home-assistant":"plugin.js"},engines:{node:">=22"}},null,2)+"\n");
@@ -22,4 +29,4 @@ if(manifest.schema!==4)throw new Error("Expected Anna schema 4");
 for(const file of ["index.html","app.js","policy.mjs","security-ui.mjs","style.css"]){
  if(!fs.existsSync(path.join(project,"bundle",file)))throw new Error("Missing bundle file: "+file);
 }
-console.log("Anna companion App prepared with bundled Executa version "+executable.version);
+console.log("Anna companion App prepared with bundled Linux binary Executa "+executable.version);
