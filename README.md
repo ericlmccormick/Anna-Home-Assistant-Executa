@@ -1,24 +1,26 @@
 # Home Assistant for Anna OS — Control Center development branch
 
-> **Branch:** `feature/anna-control-center` · Executa `0.1.2` · Anna companion App `0.1.1`
+> **Branch:** `fix/anna-review-2026-11` · Executa `0.1.4` · Anna companion App `0.1.3`
 > **Status:** integration preview, not approved for public deployment. `main` and both Pebble projects remain unchanged.
 
 This project provides a reusable Home Assistant Executa and a companion Anna App to configure a per-device-category security policy with PIN, TOTP, and optional WebAuthn passkey verification. It is adapted from [Pebble Home Assistant Bridge](https://github.com/ericlmccormick/Pebble-HA-plug-in).
+
+![Home Assistant Control Center logo](anna-app/assets/home-assistant-logo-128.png)
 
 ## What works now
 
 - **Executa:** JSON-RPC stdio, credential-secured Home Assistant API access, entity state reads, Assist conversation, allowlisted service calls, custom events, permission status, and fail-closed policy enforcement.
 - **Default policy:** `sensor.*` and `binary_sensor.*` are readable without an additional permission gate, **after** the user configures Home Assistant authentication. Every other read/control capability defaults to **disabled**.
-- **Tri-state policy:** Each configurable category supports `disabled`, `enabled`, or `pin`. Locks, doors/covers and security systems are marked verification-recommended, but the user can choose their own state.
+- **Tri-state policy:** Each configurable category supports `disabled`, `enabled`, or `verify` (legacy `pin` maps to `verify`). Locks, doors/covers and security systems are marked verification-recommended, but the user can choose their own state.
 - **Anna companion App:** Responsive settings UI, policy draft storage, export/copy as JSON, test connection, and active-policy readback through `get_permissions`. See [anna-app/README.md](anna-app/README.md).
 
 ## Important limitations
 
 1. Anna provides a native **Advanced → Executa** credential form. Its documented App Host API does **not** provide a secure API to write an Executa's `HA_URL`, `HA_TOKEN` or PIN. The App therefore **never collects or stores those secrets**. Enter them in Anna's native Executa settings.
 2. The App saves a **nonsecret permission draft**. To enforce your selections, copy the generated JSON into the native Executa credential `HA_POLICY_JSON`. The Executa reads and enforces that value for every invocation, including calls originating from other Anna apps.
-3. **Approval requires Anna v2 per-user storage and a trusted Control Center interaction.** Verify mode queues an exact action for 120 seconds. A user can approve with an Anna-managed 6–12 digit PIN, a configured TOTP authenticator code, or a WebAuthn passkey if the Anna App iframe supports it. Phone notifications are convenience prompts, not verification. This has not been deployed on a live Anna Agent yet.
+3. **Approval requires Anna v2 per-user storage and a trusted Control Center interaction.** Verify mode queues an exact action for 120 seconds. A user can approve with an Anna-managed 6–12 digit PIN, a configured TOTP authenticator code, with an authenticator app code. WebAuthn passkeys are currently disabled: Anna does not delegate public-key credentials to App iframes. Phone notifications are convenience prompts, not verification. This has not been deployed on a live Anna Agent yet.
 4. **Home Assistant Assist may trigger device actions internally.** Even requiring verification for an Assist request cannot enforce the separate device categories inside HA; strong separation requires the HA account/agent to restrict allowed domains.
-5. Only automated tests, protocol smoke tests and packaging have been verified. No live Anna Agent or Home Assistant integration tests have yet been completed.
+5. Only automated tests, protocol smoke tests and packaging have been verified. No completed, independently verified Anna Cloud Agent fresh-install or live Home Assistant tests are available.
 
 ## Native Executa credentials
 
@@ -51,7 +53,7 @@ Direct service categories: lights, switches, fans, thermostats, scenes, automati
 
 ## Test and build
 
-Requires Node.js 22+. No third-party runtime dependencies.
+Requires Node.js 22+. The passkey verifier uses the declared `@simplewebauthn/server` dependency.
 
 ```bash
 npm test
@@ -65,7 +67,7 @@ npm run validate
 npm run dev
 ```
 
-The CI workflow runs Executa security/API tests and companion App tests, builds a Linux archive and prepares the bundled App sources. An end-to-end live Anna deployment, passkey iframe compatibility check, and security review are still required. See [the Control Center setup and limitations](anna-app/README.md).
+The CI workflow runs Executa security/API tests and companion App tests, builds a Linux archive and prepares the bundled App sources. An end-to-end live Anna deployment, passkey iframe compatibility check, and security review are still required. See [the Control Center setup and limitations](anna-app/README.md) and [Anna reviewer checklist](anna-app/REVIEW_SUBMISSION.md).
 
 ## Release rule
 
@@ -74,3 +76,5 @@ Do **not** merge to `main`, publish, or expose physical security controls until 
 Resources: [Anna Executa protocol](https://anna.partners/developers/tools/executa-protocol), [Anna credential security](https://anna.partners/developers/tools/executa-credentials), [Anna App UI Host API](https://anna.partners/developers/apps/app-ui-host-api).
 
 Licensed MIT. Independent community integration; not affiliated with Anna or Home Assistant.
+
+**Anna publishing note:** The app's development manifest still contains a `bundled:home-assistant` placeholder. Use `ANNA_HOME_ASSISTANT_TOOL_ID=<Anna-minted ID> npm run prepare:release` inside `anna-app` before pushing a new App version. The app bundles a reference to a published Executa, not its source archive. The developer must complete the actual Cloud Agent test before review resubmission.
