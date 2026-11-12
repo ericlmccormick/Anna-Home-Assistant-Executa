@@ -38,6 +38,20 @@ Connect your own Home Assistant smart home to Anna through a configurable connec
 - No port-forwarding of plain HTTP. A local-only address such as `192.168.x.x:8123`, `localhost`, or `homeassistant.local` is **not reachable** from the Cloud Agent.
 - A Local Agent is appropriate for users who keep Home Assistant on their LAN, but a user still must configure an address accessible from the Local Agent machine. HTTPS remains strongly preferred.
 
+## Disposable Home Assistant test environment
+
+A minimal Home Assistant-compatible demo server lives at [review/demo-ha-server.mjs](../review/demo-ha-server.mjs). It has three simulated entities: `sensor.demo_temperature`, `binary_sensor.demo_motion`, and `light.demo_lamp`. The only mutation it accepts is turning/toggling the demo lamp; lock, alarm, and other dangerous service calls are not implemented.
+
+```bash
+# From the repository root; this token is for the throwaway demo server only.
+export DEMO_HA_TOKEN="$(openssl rand -hex 24)"
+node review/demo-ha-server.mjs
+```
+
+The server deliberately binds to `127.0.0.1:8124` only. For an Anna **Cloud Agent**, it must be exposed using a **temporary, trusted HTTPS reverse proxy or tunnel** that reaches this loopback endpoint; use that public HTTPS URL for `HA_URL` and your generated demo token for `HA_TOKEN`. Do not publish the test token in GitHub or share the URL indefinitely. Revoke the URL and stop the demo server after testing. This is a testing fixture, not the official Home Assistant product or a hardened public API.
+
+For a Local Agent running on the same computer, `http://127.0.0.1` is deliberately rejected by the production Executa for security reasons; use a real trusted HA endpoint or an HTTPS reverse proxy instead.
+
 ## Fresh-install test plan (use a disposable demo HA environment)
 
 1. Start a fresh Anna **Cloud Agent** and confirm it reports online.
