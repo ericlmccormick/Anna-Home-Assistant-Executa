@@ -8,7 +8,7 @@
 - **Slug:** `home-assistant-control`
 - **Category:** Utilities
 - **Tagline:** Connect Home Assistant to Anna with simple, secure controls
-- **Logo:** [Home Assistant logo](assets/home-assistant-logo-128.png) (for the Console, prefer uploading the provided 256×256 PNG)
+- **Logo:** [Home Assistant logo](assets/home-assistant-logo-128.png) (128×128 PNG)
 - **Homepage:** https://github.com/ericlmccormick/Anna-Home-Assistant-Executa
 - **Support:** https://github.com/ericlmccormick/Anna-Home-Assistant-Executa/issues
 - **Privacy policy:** https://github.com/ericlmccormick/Anna-Home-Assistant-Executa/blob/fix/anna-review-2026-11/anna-app/PRIVACY.md
@@ -37,7 +37,7 @@ Connect your own Home Assistant smart home to Anna through a configurable connec
 - A Home Assistant **long-lived access token** for a separate, least-privileged Home Assistant account. Never send the token to reviewers via email or chat.
 - A running Anna Cloud Agent with the Home Assistant Executa installed and active.
 - No port-forwarding of plain HTTP. A local-only address such as `192.168.x.x:8123`, `localhost`, or `homeassistant.local` is **not reachable** from the Cloud Agent.
-- A Local Agent is appropriate for users who keep Home Assistant on their LAN, but a user still must configure an address accessible from the Local Agent machine. HTTPS remains strongly preferred.
+- The Connector ships a Linux x86-64 binary. A Local Agent on that platform can use a Home Assistant URL reachable from its machine. HTTPS remains strongly preferred.
 
 ## Disposable Home Assistant test environment
 

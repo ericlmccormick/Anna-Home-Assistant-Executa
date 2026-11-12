@@ -27,7 +27,7 @@
       <label class="field-label" for="agent-type">Where does your Anna Agent run?</label>
       <select id="agent-type" class="policy-control">
         <option value="cloud">Cloud Agent (Anna-hosted)</option>
-        <option value="local">Local Agent (my computer / home network)</option>
+        <option value="local">Local Agent (Linux x86-64)</option>
       </select>
       <div id="agent-explainer" class="agent-note">
         <strong>Cloud Agent:</strong> Your Home Assistant server must be reachable through a public HTTPS address with a trusted certificate. Private IP addresses, localhost and .local hostnames won't work from Anna's cloud.
@@ -37,14 +37,14 @@
     <section class="panel setup" aria-labelledby="setup-title">
       <h2 id="setup-title">Connect in three steps</h2>
       <ol>
-        <li><strong>Choose your Agent.</strong> In Anna, open <b>Agents</b> and confirm the agent you use for chat is online.</li>
-        <li><strong>Open secure connection settings.</strong> In Anna, navigate to <b>Advanced → Executa → Home Assistant Connector → Credentials</b>. This is Anna’s secure form for your token.</li>
+        <li><strong>Choose your Agent.</strong> Open <a href="https://anna.partners/agents" target="_blank" rel="noopener noreferrer">Anna Agents</a>. Confirm your Cloud Agent is online, or select an online Linux x86-64 Local Agent. This menu explains the options; it does not switch Agents.</li>
+        <li><strong>Open secure connection settings.</strong> Open <a href="https://anna.partners/executa" target="_blank" rel="noopener noreferrer">Anna’s Executa Hub</a>. Select <b>Learned</b>, find <b>Home Assistant Connector</b>, and choose <b>Credentials</b>. You can also reach it from <b>Advanced → Executa → Home Assistant Connector → Credentials</b>.</li>
         <li><strong>Add your server address and access token.</strong> In the credential form, enter your HTTPS Home Assistant base URL in <code>HA_URL</code> and your long-lived access token in <code>HA_TOKEN</code>. Save there, return here, and select <b>Test connection</b>.</li>
       </ol>
       <details><summary><strong>How to find your Home Assistant access token</strong></summary><p class="small">In Home Assistant, open your profile (lower-left sidebar), find <b>Long-lived access tokens</b>, select <b>Create Token</b>, and copy it directly into the native Anna Executa credential form. Do not paste tokens into chat.</p></details><h3>Choose permissions (optional)</h3>
       <ol>
         <li>Choose your access levels below and select <b>Copy settings</b>. Sensor reads are enabled by default. To list lights or check their status, use <b>Other entity states</b>. <b>Lights</b> controls actions such as turning them on or off.</li>
-        <li>Return to the same credential form, paste the settings into <b>Permissions policy</b> (<code>HA_POLICY_JSON</code>), and click <b>Save</b>. Then select <b>Check active settings</b> here to confirm. <b>Save draft</b> keeps your edits in Control Center until you apply them in the credential form.</li>
+        <li>Return to the same credential form, paste the settings into <b>Permissions policy</b> (<code>HA_POLICY_JSON</code>), and click <b>Save</b>. Then select <b>Check active settings</b> here to confirm. <b>Save choices</b> keeps your edits in Control Center until you apply them in the credential form.</li>
         <li>If you choose <b>Verify</b>, configure an approval method under <b>Set up verification</b> below. Review and approve pending actions in <b>Identity verification</b>.</li>
       </ol>
       <p class="small">Enter your Home Assistant access token only in Anna’s Executa credential form.</p>
@@ -76,7 +76,7 @@
       <p id="security-methods" class="small" aria-live="polite">Checking configured methods…</p>
       <div class="credential-grid">
         <div class="credential-item">
-          <span class="credential-label">Passkey (recommended)</span>
+          <span class="credential-label">Passkey</span>
           <p>Biometrics or device unlock through WebAuthn. Anna currently does not delegate WebAuthn to App windows. Planned for a future compatible host.</p>
         </div>
         <div class="credential-item">
@@ -95,7 +95,7 @@
           <option value="totp">Authenticator app code</option>
           <option value="passkey" disabled>Passkey (unavailable in Anna iframe)</option>
         </select>
-        <label for="verification-code">Code (not needed for passkeys)</label>
+        <label for="verification-code">Approval PIN or authenticator code</label>
         <input id="verification-code" type="password" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code or PIN" maxlength="12">
       </div>
       <div class="actions"><button class="button primary" type="button" id="security-refresh">Refresh pending requests</button></div>
@@ -104,10 +104,10 @@
     </section>
     <section class="panel" aria-labelledby="enrollment-title">
       <h2 id="enrollment-title">Set up verification</h2>
-      <p class="small">Enter the initial PIN in Anna's native Executa credentials first. You'll use it to register a passkey; no PIN is stored in this App.</p>
+      <p class="small">To use a PIN, set a 6–12 digit PIN in the Connector’s <b>Approval and enrollment PIN</b> field in Anna. Use that PIN only in Control Center when reviewing a request.</p>
       <div class="actions">
-        <input id="enroll-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Native Executa approval PIN" maxlength="12">
-        <button class="button" type="button" id="enroll-passkey" disabled title="Anna App iframes currently do not support WebAuthn">Register a passkey (future)</button>
+        <input id="enroll-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Native Executa approval PIN" maxlength="12" hidden disabled>
+        <button class="button" type="button" id="enroll-passkey" disabled hidden>Register a passkey</button>
       </div>
       <p class="small">For an authenticator app, generate an initial Base32 seed locally, add it to your authenticator, and enter that seed into Anna's <code>HA_TOTP_SECRET</code> credential.</p>
       <div class="actions"><button class="button" type="button" id="generate-totp">Generate authenticator seed</button>

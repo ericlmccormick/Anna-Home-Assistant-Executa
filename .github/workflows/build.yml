@@ -18,6 +18,11 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: cd anna-app && npm test && npm run build
+      - name: Resolve the Anna release dependency
+        if: github.ref_name == 'fix/anna-review-2026-11'
+        env:
+          ANNA_HOME_ASSISTANT_TOOL_ID: tool-ericlmccormick-home-assistant-connector-j6wpmwva
+        run: node anna-app/scripts/prepare-release.mjs
       - name: Package Anna companion App
         run: |
           version=$(node -p 'require("./anna-app/package.json").version')

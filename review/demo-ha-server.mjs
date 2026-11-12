@@ -2,7 +2,7 @@
 // Use only behind a trusted HTTPS reverse proxy/tunnel. No real home devices.
 // Requires a unique DEMO_HA_TOKEN. Binds to 127.0.0.1 by default.
 import {createServer} from 'node:http';
-import {randomUUID} from 'node:crypto';
+import {pathToFileURL} from 'node:url';
 export function makeDemoServer({token}={}){
  if(!token||typeof token!=='string'||token.length<24)throw new Error('Set a unique DEMO_HA_TOKEN of at least 24 characters');
  const states=new Map([
@@ -40,7 +40,7 @@ export function makeDemoServer({token}={}){
  });
  return {server,states,getCallCount:()=>calls};
 }
-if(import.meta.url===new URL('file://'+process.argv[1]).href){
+if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href){
  const token=process.env.DEMO_HA_TOKEN;
  if(!token||token.length<24){console.error('Set DEMO_HA_TOKEN to a unique 24+ character value.');process.exit(1)}
  const port=Number(process.env.DEMO_HA_PORT||8124);

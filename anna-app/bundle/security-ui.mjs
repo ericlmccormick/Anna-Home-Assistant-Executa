@@ -28,7 +28,7 @@ export function setupSecurity({invoke,notice}){
    const [permissions,res]=await Promise.all([invoke('get_permissions'),invoke('list_pending')]);
    $("security-methods").textContent="PIN: "+(permissions.pin_configured?"configured":"not configured")+
     " · Authenticator: "+(permissions.totp_configured?"configured":"not configured")+
-    " · Passkeys: "+(webauthnAvailable()?"browser supports WebAuthn":"browser not supported")+
+    " · Passkeys: unavailable in this App"+
     " · Phone notifications: "+(permissions.phone_notifications?"configured":"not configured");
    const pending=res.pending||[];
    if(!pending.length){list.append(el("p","small","No pending actions. Requests expire after 2 minutes."));msg("Approval queue is empty.");return}
@@ -69,8 +69,11 @@ export function setupSecurity({invoke,notice}){
     if(!/^[0-9]{6,12}$/.test(code))throw new Error("Enter your 6-digit authenticator code or 6–12 digit PIN");
     result=await invoke("approve_action",{request_id:id,method,code});
    }
-   msg(result.executed?"Verified and executed "+(result.entity_id||result.event_type):"Verified, but the action was not executed");
+   const outcome=result.executed?
+    "Verified and executed "+(result.entity_id||result.event_type):
+    "Verified request completed.";
    await reload();
+   notice(outcome);
   }catch(e){msg("Approval not completed: "+e.message)}finally{button.disabled=false}
  }
  async function enroll(){
