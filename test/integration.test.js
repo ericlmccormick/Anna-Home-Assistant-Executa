@@ -11,8 +11,9 @@ function mock(value,status=200){return async (_url,opts)=>({ok:status>=200&&stat
 
 test('describe returns Anna-compatible manifest and credentials',async()=>{
   const r=await handle({jsonrpc:'2.0',id:1,method:'describe'});
-  assert.equal(r.result.version,'0.1.2');
+  assert.equal(r.result.version,'0.1.3');
   assert.ok(r.result.tools.some(t=>t.name==='get_state'));
+  assert.ok(r.result.tools.every(t=>t.description?.trim() && t.parameters.every(p=>p.description?.trim())));
   assert.ok(r.result.credentials.some(c=>c.name==='HA_TOKEN'&&c.sensitive));
 });
 test('health ready',async()=>assert.deepEqual((await handle({jsonrpc:'2.0',method:'health'})).result,{status:'ready'}));
@@ -27,7 +28,7 @@ test('base URL rejects credential leakage and redirections',()=>{
   assert.equal(safeBase('http://192.168.1.2:8123',true),'http://192.168.1.2:8123');
 });
 test('private IPv4 validation rejects invalid hosts',()=>{
-  assert.ok(isPrivateIPv4('10.1.2.3'));
+  assert.ok(isPrivateIPv4('10.1.3.3'));
   assert.ok(isPrivateIPv4('172.16.0.1'));
   assert.ok(isPrivateIPv4('192.168.1.2'));
   assert.equal(isPrivateIPv4('172.32.0.1'),false);
@@ -51,6 +52,18 @@ test('list_states filters and limits',async()=>{
   const r=await invoke('list_states',{domain:'light',limit:1},extendedRead,mock(all));
   assert.equal(r.data.count,2);assert.equal(r.data.returned,1);
   assert.equal(r.data.entities[0].entity_id,'light.a');
+});
+test('compact reads keep useful state fields while detailed reads keep their existing shape',async()=>{
+  const entity={entity_id:'sensor.room',state:'21',last_changed:'changed',last_updated:'updated',
+    attributes:{friendly_name:'Room temperature',unit_of_measurement:'°C',device_class:'temperature'}};
+  const compact={entity_id:'sensor.room',state:'21',name:'Room temperature',unit:'°C'};
+  const read=await invoke('get_state',{entity_id:entity.entity_id,compact:true},creds,mock(entity));
+  assert.deepEqual(read.data,compact);
+  const detailed=await invoke('get_state',{entity_id:entity.entity_id},creds,mock(entity));
+  assert.deepEqual(detailed.data,entity);
+  const light={entity_id:'light.kitchen',state:'on',last_changed:'changed'};
+  const listing=await invoke('list_states',{compact:true},extendedRead,mock([entity,light]));
+  assert.deepEqual(listing.data,{count:2,returned:2,entities:[compact,{entity_id:'light.kitchen',state:'on'}]});
 });
 test('converse posts text and retains conversation id',async()=>{
   let posted;

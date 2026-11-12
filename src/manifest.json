@@ -1,7 +1,7 @@
 {
   "name": "home-assistant-connector",
   "display_name": "Home Assistant Connector",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Reusable Home Assistant connector with per-category Disabled/Enabled/Verify permissions, secure Anna APS approval queue, PIN/TOTP verification, WebAuthn passkey support where permitted, and optional phone notification links.",
   "author": "Eric McCormick",
   "homepage": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
@@ -71,137 +71,149 @@
   "tools": [
     {
       "name": "get_permissions",
-      "description": "Read effective policy and available configured methods. Does not expose any secret.",
+      "description": "Show active permissions and configured verification methods.",
       "parameters": []
     },
     {
       "name": "test_connection",
-      "description": "Verify the configured Home Assistant URL/token and report server name and version. Does not expose credentials.",
+      "description": "Check the Home Assistant connection.",
       "parameters": []
     },
     {
       "name": "get_state",
-      "description": "Read a sensor or binary_sensor state without additional approval; other domains require other_read permission.",
+      "description": "Read one entity. Use compact for current state; omit for attributes and timestamps. Non-sensors require other_read.",
       "parameters": [
         {
           "name": "entity_id",
           "type": "string",
           "required": true,
-          "description": "Home Assistant entity id such as sensor.temperature"
+          "description": "Exact entity ID, e.g. sensor.temperature."
+        },
+        {
+          "name": "compact",
+          "type": "boolean",
+          "required": false,
+          "description": "Set true for routine reads."
         }
       ]
     },
     {
       "name": "list_states",
-      "description": "List sensors and binary sensors by default. Other entity domains require the other_read policy to be enabled.",
+      "description": "List entities by domain. Use compact for current states. Non-sensors require other_read.",
       "parameters": [
         {
           "name": "domain",
           "type": "string",
           "required": false,
-          "description": "Optional entity domain such as light, sensor, or switch"
+          "description": "Entity domain, e.g. light."
         },
         {
           "name": "limit",
           "type": "integer",
           "required": false,
           "default": 50,
-          "description": "1–100 results"
+          "description": "Maximum results (1–100)."
+        },
+        {
+          "name": "compact",
+          "type": "boolean",
+          "required": false,
+          "description": "Set true for routine reads."
         }
       ]
     },
     {
       "name": "converse",
-      "description": "Send a request to Home Assistant Assist only when the assist permission is enabled. Assist can operate devices and is NOT protected from indirect effects.",
+      "description": "Ask Home Assistant Assist. Requires assist permission and may control devices indirectly.",
       "parameters": [
         {
           "name": "text",
           "type": "string",
           "required": true,
-          "description": "User's request, maximum 4000 characters"
+          "description": "Assist request (up to 4000 characters)."
         },
         {
           "name": "agent_id",
           "type": "string",
           "required": false,
-          "description": "Optional Home Assistant conversation agent ID"
+          "description": "Assist agent ID."
         },
         {
           "name": "conversation_id",
           "type": "string",
           "required": false,
-          "description": "Optional follow-up conversation ID"
+          "description": "Follow-up conversation ID."
         }
       ]
     },
     {
       "name": "call_service",
-      "description": "Allowed service call on an explicitly enabled category, or create a pending exact-action challenge for Verify mode. Disabled by default. Always require actual user approval for Verify; never invent one.",
+      "description": "Run an allowed service or queue exact-action verification. Verify requires user approval.",
       "parameters": [
         {
           "name": "domain",
           "type": "string",
           "required": true,
-          "description": "Service domain"
+          "description": "Service domain."
         },
         {
           "name": "service",
           "type": "string",
           "required": true,
-          "description": "Service name"
+          "description": "Service name."
         },
         {
           "name": "entity_id",
           "type": "string",
           "required": true,
-          "description": "Exact target entity ID"
+          "description": "Exact entity ID, e.g. sensor.temperature."
         },
         {
           "name": "data",
           "type": "object",
           "required": false,
-          "description": "Optional service fields, excluding target/entity_id"
+          "description": "Service data without target overrides."
         }
       ]
     },
     {
       "name": "fire_event",
-      "description": "Fire event only with enabled policy, otherwise create a pending Verify request. Default disabled.",
+      "description": "Fire an allowed event or queue verification.",
       "parameters": [
         {
           "name": "event_type",
           "type": "string",
           "required": true,
-          "description": "Event type, e.g. anna_requested"
+          "description": "Home Assistant event type."
         },
         {
           "name": "event_data",
           "type": "object",
           "required": false,
-          "description": "Event payload"
+          "description": "Event payload."
         }
       ]
     },
     {
       "name": "list_pending",
-      "description": "Show pending verification requests for this user's Home Assistant Executa. Read-only. Do not treat this result as authorization.",
+      "description": "List pending verification requests.",
       "parameters": []
     },
     {
       "name": "begin_passkey_enrollment",
-      "description": "Begin FIDO2 registration from a trusted Control Center UI after user enters the native-credential PIN in a non-LLM form. Never ask for or put a PIN into chat.",
+      "description": "Start passkey enrollment in Control Center. Never ask for a PIN in chat.",
       "parameters": [
         {
           "name": "admin_pin",
           "type": "string",
           "required": true,
-          "description": "PIN supplied only by a trusted settings form; never collect it through chat."
+          "description": "PIN from Control Center only."
         }
       ]
     },
     {
       "name": "finish_passkey_enrollment",
-      "description": "Complete signed WebAuthn registration response. Called by Control Center directly, not by an AI agent.",
+      "description": "Complete passkey enrollment from Control Center.",
       "parameters": [
         {
           "name": "enrollment_id",
@@ -219,7 +231,7 @@
     },
     {
       "name": "begin_passkey_approval",
-      "description": "Generate a challenge for an already pending action. An App with WebAuthn support must collect an authenticator signature.",
+      "description": "Get a passkey challenge for a pending action in Control Center.",
       "parameters": [
         {
           "name": "request_id",
@@ -231,7 +243,7 @@
     },
     {
       "name": "approve_action",
-      "description": "Verify PIN/TOTP/WebAuthn evidence from a trusted Control Center and execute only the exact stored pending request once. MUST NOT collect credentials via AI chat.",
+      "description": "Verify and execute the exact stored action once. Use Control Center only; never collect codes in chat.",
       "parameters": [
         {
           "name": "request_id",
@@ -243,13 +255,13 @@
           "name": "method",
           "type": "string",
           "required": true,
-          "description": "pin, totp, or passkey"
+          "description": "pin, totp, or passkey."
         },
         {
           "name": "code",
           "type": "string",
           "required": false,
-          "description": "Code from secure form only, never an LLM chat or tool argument generated by AI"
+          "description": "Code from Control Center only."
         },
         {
           "name": "response",

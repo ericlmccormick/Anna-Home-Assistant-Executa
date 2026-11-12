@@ -115,6 +115,14 @@ function validService(args){
 function validEvent(args){
   return {category:'events',action:{kind:'event',event_type:part(args.event_type,'event_type'),event_data:obj(args.event_data,'event_data')}};
 }
+function compactState({entity_id,state,attributes}){
+  const result={entity_id,state};
+  const name=attributes?.friendly_name;
+  const unit=attributes?.unit_of_measurement;
+  if(name && name!==entity_id)result.name=name;
+  if(unit)result.unit=unit;
+  return result;
+}
 async function executeAction(cfg,action,fetcher){
   if(action.kind==='service'){
     const {category}=validService(action); // revalidate stored action
@@ -130,6 +138,7 @@ async function executeAction(cfg,action,fetcher){
   if(action.kind==='read_state'){
     const id=entityId(action.entity_id);
     const state=await request(cfg,`/api/states/${encodeURIComponent(id)}`,'GET',undefined,fetcher);
+    if(action.compact===true)return compactState(state);
     return {entity_id:state.entity_id,state:state.state,attributes:state.attributes||{},last_changed:state.last_changed,last_updated:state.last_updated};
   }
   if(action.kind==='list_states'){
@@ -139,7 +148,12 @@ async function executeAction(cfg,action,fetcher){
     if(!Array.isArray(states))throw new UpstreamError('Unexpected Home Assistant states response');
     const includeOther=(domain && domain!=='sensor'&&domain!=='binary_sensor')||modeFor(cfg.policy,'other_read')==='enabled'||action.authorized_all===true;
     const items=states.filter(x=>x&&typeof x.entity_id==='string'&&(!domain||x.entity_id.startsWith(domain+'.'))&&(includeOther||isSensor(x.entity_id)));
-    return {count:items.length,returned:Math.min(items.length,limit),entities:items.slice(0,limit).map(x=>({entity_id:x.entity_id,name:x.attributes?.friendly_name||x.entity_id,state:x.state,unit:x.attributes?.unit_of_measurement||null,last_changed:x.last_changed||null}))};
+    const page=items.slice(0,limit);
+    const entities=action.compact===true ? page.map(compactState) : page.map(x=>({
+      entity_id:x.entity_id,name:x.attributes?.friendly_name||x.entity_id,state:x.state,
+      unit:x.attributes?.unit_of_measurement||null,last_changed:x.last_changed||null
+    }));
+    return {count:items.length,returned:entities.length,entities};
   }
   if(action.kind==='converse'){
     const body=obj(action.body,'conversation body');
@@ -205,29 +219,31 @@ async function invoke(tool, args={}, context={}, fetcher=globalThis.fetch, store
       }
       case 'get_state': {
         const id=entityId(args.entity_id);
+        const action={kind:'read_state',entity_id:id,compact:args.compact===true};
         const category=isSensor(id)?'sensor_read':'other_read';
         const mode=modeFor(cfg.policy,category);
         if(mode==='disabled')throw new InputError('PERMISSION_DISABLED: '+category);
         if(mode==='verify' && category==='other_read'){
-          const receipt=await approval.createPending(store,{kind:'read_state',entity_id:id});
+          const receipt=await approval.createPending(store,action);
           await phoneNotice(cfg,receipt,fetcher);
           return fail('VERIFICATION_REQUIRED: approve in Control Center',receipt);
         }
-        return ok(await executeAction(cfg,{kind:'read_state',entity_id:id},fetcher));
+        return ok(await executeAction(cfg,action,fetcher));
       }
       case 'list_states': {
         const domain=args.domain===undefined?'':part(args.domain,'domain');
         const limit=args.limit===undefined?50:args.limit;
         if(!Number.isInteger(limit)||limit<1||limit>100) throw new InputError('limit must be 1–100');
+        const action={kind:'list_states',domain,limit,compact:args.compact===true};
         const other=modeFor(cfg.policy,'other_read');
         const wantsOther=domain!=='sensor'&&domain!=='binary_sensor';
         if(wantsOther && other==='verify'){
-          const receipt=await approval.createPending(store,{kind:'list_states',domain,limit,authorized_all:true});
+          const receipt=await approval.createPending(store,{...action,authorized_all:true});
           await phoneNotice(cfg,receipt,fetcher);
           return fail('VERIFICATION_REQUIRED: approve in Control Center',receipt);
         }
         if(domain && wantsOther && other==='disabled')throw new InputError('PERMISSION_DISABLED: other_read');
-        return ok(await executeAction(cfg,{kind:'list_states',domain,limit},fetcher));
+        return ok(await executeAction(cfg,action,fetcher));
       }
       case 'converse': {
         const text=requiredString(args.text,'text',4000);
