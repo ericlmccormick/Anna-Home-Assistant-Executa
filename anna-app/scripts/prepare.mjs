@@ -26,7 +26,7 @@ const app=JSON.parse(fs.readFileSync(path.join(project,"app.json"),"utf8"));
 const manifest=JSON.parse(fs.readFileSync(path.join(project,"manifest.json"),"utf8"));
 if(!app.bundled_executas?.["home-assistant"]||!manifest.required_executas?.some(x=>x.tool_id==="bundled:home-assistant"))throw new Error("Bundled Executa declaration is incomplete");
 if(manifest.schema!==4)throw new Error("Expected Anna schema 4");
-for(const file of ["index.html","app.js","policy.mjs","security-ui.mjs","style.css"]){
+for(const file of ["index.html","app.js","policy.mjs","security-ui.mjs","style.css","anna-tool-ids.js","assets/home-assistant-logo-128.png"]){
  if(!fs.existsSync(path.join(project,"bundle",file)))throw new Error("Missing bundle file: "+file);
 }
 console.log("Anna companion App prepared with bundled Linux binary Executa "+executable.version);
