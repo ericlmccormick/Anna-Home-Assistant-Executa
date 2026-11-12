@@ -1,6 +1,6 @@
-# Home Assistant for Anna — Control Center v0.1.1
+# Home Assistant for Anna — Control Center v0.1.3
 
-**Private development branch only.** The App and Executa can be installed together through Anna's bundled Executa mechanism; live Agent installation is not yet verified.
+**Private development branch only.** A published App can auto-install a required, already-published Executa by its minted tool ID. The App archive itself does not install Executa files. A live Cloud Agent installation remains unverified.
 
 ## Design
 
@@ -11,7 +11,7 @@ The App is UI only; the Executa owns authentication and the Home Assistant API c
 When a caller requests a Verify-mode service/event:
 1. Executa validates the exact domain/service/entity/data or event, then saves it in per-user Executa APS tool storage for at most two minutes.
 2. The caller receives a \`VERIFICATION_REQUIRED\` result with a request ID; optionally, an HA Companion App notification is sent.
-3. User opens this Control Center (Anna cannot currently be made to pop it open from an arbitrary Executa), checks the exact device and action, and approves with passkey/PIN/TOTP.
+3. User opens this Control Center (Anna cannot currently be made to pop it open from an arbitrary Executa), checks the exact device and action, and approves with PIN/TOTP.
 4. Executa validates proof, atomically consumes the action record, and executes **that stored action**, never freeform command arguments from the approval App. Pending actions expire and cannot be replayed.
 5. Failure of Anna storage, invalid credentials, expired challenges, missing WebAuthn support or failed PIN/TOTP verification must **not execute the action**.
 
@@ -32,11 +32,11 @@ In **Anna → Advanced → Executa → Learned → Home Assistant Connector → 
 
 **Don't enter PINs, authenticator codes, passkey replies, or tokens into Anna chat.** PIN/TOTP are accepted only via direct Control Center \`anna.tools.invoke\` calls; these still travel through Anna's RPC infrastructure and must be vetted against platform logging before production.
 
-### Use a passkey
+### Passkeys: planned, disabled in the current Anna iframe
 
 Set \`HA_APPROVAL_PIN\` as an enrollment bootstrap credential. In Control Center, enter it once in the **Register passkey** form. The browser uses \`navigator.credentials.create\`; the Executa verifies the signed registration with \`@simplewebauthn/server\` (origin \`https://anna.partners\`, RP \`anna.partners\`, required user verification) and saves only the public key in Executa APS. Subsequent requests use \`navigator.credentials.get\` and short-lived challenge verification.
 
-**Platform blocker:** Anna's iframe must be same-origin or allow \`publickey-credentials-create\` and \`publickey-credentials-get\` through its embedding policy. WebAuthn support has not been tested in a live Anna App. Passkey failures are fail-closed.
+**Platform blocker:** Anna currently rejects `publickey-credentials-get` and `publickey-credentials-create` as App browser permissions. The passkey UI is therefore disabled for this review candidate. Use PIN or an authenticator code; do not advertise live passkey support.
 
 ### Use an authenticator app
 
@@ -81,3 +81,16 @@ Relevant documentation:
 - [Anna App Host API](https://anna.partners/developers/apps/app-ui-host-api)
 - [WebAuthn iframe permissions](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/publickey-credentials-create)
 - [HA Companion actionable notifications](https://companion.home-assistant.io/docs/notifications/actionable-notifications/)
+
+## Review-fix release
+
+See [REVIEW_SUBMISSION.md](REVIEW_SUBMISSION.md) for the complete Cloud vs Local Agent network explanation, an accurate App listing, executable dependency/tool ID requirements, a fresh-install Cloud Agent test checklist, and the reviewer video outline. The new Home Assistant logo is saved in `assets/` and rendered from `bundle/assets/`. For the Anna Listing upload use the 256×256 source PNG from the release handoff.
+
+Before pushing from a logged-in Anna CLI account:
+
+```
+cd anna-app
+ANNA_HOME_ASSISTANT_TOOL_ID=tool-your-minted-id npm run prepare:release
+# review the manifest and window tool ID, then
+anna-app apps push
+```
