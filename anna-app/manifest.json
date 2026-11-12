@@ -7,7 +7,7 @@
     }
   ],
   "optional_executas": [],
-  "system_prompt_addendum": "The Home Assistant Executa allows sensor reads by default. All other access is disabled until the user configures policy in Anna Executa credentials. The Control Center stores policy drafts, not active authorization. Never claim that a draft enabled a command. A PIN-selected action fails closed while PIN approvals are unimplemented.",
+  "system_prompt_addendum": "Home Assistant Control Center controls a user's own HA instance. Sensor readings enabled after credentials; all other categories disabled by default. A permission set to Verify requires an explicit user approval from the Control Center; never claim approval from AI text or bypass required verification. The UI stores a draft of policy only; changes become effective only after applying the exported policy in Anna Executa credential settings. Home Assistant Assist, scenes, automations and scripts have indirect actions and may need server-side HA restrictions. Do not request or expose HA tokens or verification codes in chat.",
   "tags": [
     "home-assistant",
     "smarthome",
