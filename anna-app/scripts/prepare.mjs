@@ -24,7 +24,8 @@ fs.writeFileSync(path.join(target,"plugin.js"),"#!/usr/bin/env node\nrequire('./
 fs.writeFileSync(path.join(target,"package.json"),JSON.stringify({name:"anna-home-assistant-executa-app",version:executable.version,private:true,type:"commonjs",main:"plugin.js",bin:{"anna-home-assistant":"plugin.js"},engines:{node:">=22"}},null,2)+"\n");
 const app=JSON.parse(fs.readFileSync(path.join(project,"app.json"),"utf8"));
 const manifest=JSON.parse(fs.readFileSync(path.join(project,"manifest.json"),"utf8"));
-if(!app.bundled_executas?.["home-assistant"]||!manifest.required_executas?.some(x=>x.tool_id==="bundled:home-assistant"))throw new Error("Bundled Executa declaration is incomplete");
+if(!Array.isArray(manifest.required_executas)||manifest.required_executas.length!==1)throw new Error("Exactly one Home Assistant Executa dependency is required");
+if(!manifest.required_executas[0]?.tool_id)throw new Error("Missing Anna-minted Executa tool ID");
 if(manifest.schema!==4)throw new Error("Expected Anna schema 4");
 for(const file of ["index.html","app.js","policy.mjs","security-ui.mjs","style.css","anna-tool-ids.js","assets/home-assistant-logo-128.png"]){
  if(!fs.existsSync(path.join(project,"bundle",file)))throw new Error("Missing bundle file: "+file);
