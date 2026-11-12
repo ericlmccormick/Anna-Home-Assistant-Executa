@@ -1,9 +1,9 @@
 {
   "slug": "home-assistant-control",
   "name": "Home Assistant Control Center",
-  "version": "0.1.1",
-  "tagline": "Secure Home Assistant control and identity verification for Anna",
-  "description": "Companion Control Center for a bundled Home Assistant Executa: sensor-only defaults, per-category Disabled/Enabled/Verify, PIN and authenticator-code approval, passkey support when enabled by Anna's browser, and optional phone verification notifications. Home Assistant URL and secrets remain in Anna's Executa credential form.",
+  "version": "0.1.2",
+  "tagline": "Connect Anna to Home Assistant with secure, adjustable device permissions",
+  "description": "Connect your existing Home Assistant smart home to Anna. View sensor readings, authorize device commands, and decide exactly what Anna can do with lights, switches, thermostats, fans, locks, garage doors, alarms, scenes, scripts, and automations. All controls start disabled; sensor readings are enabled after you connect your Home Assistant account. Set each capability to Disabled, Enabled, or Verify. For extra protection, verify individual actions with a PIN, authenticator code, or supported passkey. Optional phone alerts tell you when approval is needed. The app includes a guided setup, connection test, effective-permissions check, and an approval queue. Home Assistant URL, access token, and secrets are managed by Anna Executa credentials, not stored in the web interface. Requires your own Home Assistant server reachable by the selected Anna Agent; Cloud Agents need a publicly reachable HTTPS URL. Home Assistant Assist and automation/scripts can bypass individual device categories, so leave those disabled unless separately constrained.",
   "category": "utilities",
   "homepage_url": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
   "support_url": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa/issues",
@@ -11,5 +11,6 @@
     "home-assistant": {
       "path": "./executas/home-assistant"
     }
-  }
+  },
+  "pricing_model": "free"
 }
