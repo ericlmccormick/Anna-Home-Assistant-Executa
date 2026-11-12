@@ -94,6 +94,13 @@ async function readPolicy(){
   status("changes-status",different===0?"Matches active":"Draft differs",different===0?"ok":"muted");
  }catch(e){$("effective-policy").textContent="Cannot read active policy: "+e.message;}
 }
+const agentSelect=$("agent-type");
+agentSelect?.addEventListener("change",()=>{
+  const cloud=agentSelect.value==="cloud";
+  $("agent-explainer").innerHTML=cloud
+    ?"<strong>Cloud Agent:</strong> Home Assistant needs a public HTTPS address with a trusted certificate. Private IP addresses, localhost, and .local don't work from Anna’s cloud."
+    :"<strong>Local Agent:</strong> Use a Home Assistant URL reachable from the machine running your Agent (usually its LAN IP or hostname). HTTPS is recommended. An HTTP connection requires opting in to insecure local mode and exposes the token on the LAN.";
+});
 $("save-draft").addEventListener("click",saveDraft);
 $("copy-json").addEventListener("click",copyPolicy);
 $("reset").addEventListener("click",()=>{policy={...DEFAULT};render();status("changes-status","Unsaved draft");notice("Default access restored in draft: sensors only. Copy and apply the policy to change the Executa.");});
