@@ -11,6 +11,7 @@
 - **Logo:** [Home Assistant logo](assets/home-assistant-logo-128.png) (for the Console, prefer uploading the provided 256×256 PNG)
 - **Homepage:** https://github.com/ericlmccormick/Anna-Home-Assistant-Executa
 - **Support:** https://github.com/ericlmccormick/Anna-Home-Assistant-Executa/issues
+- **Privacy policy:** https://github.com/ericlmccormick/Anna-Home-Assistant-Executa/blob/fix/anna-review-2026-11/anna-app/PRIVACY.md
 
 **Long description:**
 
