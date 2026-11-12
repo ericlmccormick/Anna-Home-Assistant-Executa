@@ -7,11 +7,6 @@
   "category": "utilities",
   "homepage_url": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
   "support_url": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa/issues",
-  "bundled_executas": {
-    "home-assistant": {
-      "path": "./executas/home-assistant"
-    }
-  },
   "pricing_model": "free",
   "logo_url": "https://raw.githubusercontent.com/ericlmccormick/Anna-Home-Assistant-Executa/fix/anna-review-2026-11/anna-app/assets/home-assistant-logo-128.png"
 }
