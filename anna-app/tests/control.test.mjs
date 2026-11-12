@@ -54,12 +54,14 @@ test("UI includes explicit draft-only warning and does not store credential fiel
  assert.match(html,/enroll-passkey/);
  assert.match(html,/HA_TOTP_SECRET/);
  assert.match(html,/HA_PHONE_NOTIFY_SERVICE/);
+ assert.match(html,/home-assistant-logo-128.png/);
+ assert.match(html,/Passkey \(unavailable in Anna iframe\)/);
  assert.doesNotMatch(js,/storage\.set\(\{[^}]*HA_TOKEN/s);
 });
 
 test("Cloud release profile and front-end tool mapping are declared",()=>{
  const app=JSON.parse(fs.readFileSync(path.join(root,"app.json"),"utf8"));
- assert.equal(app.version,"0.1.2");
+ assert.equal(app.version,"0.1.3");
  assert.ok(fs.existsSync(path.join(root,"bundle","anna-tool-ids.js")));
  const main=fs.readFileSync(path.join(root,"bundle","app.js"),"utf8");
  assert.match(main,/AnnaAppRuntime\.connect/);
