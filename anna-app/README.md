@@ -1,4 +1,6 @@
-# Home Assistant for Anna — Control Center v0.1.3
+# Home Assistant for Anna — Control Center v0.1.4
+
+See the [illustrated user manual](USER_MANUAL.md) for installation, permissions, verification, and troubleshooting.
 
 **Private development branch only.** A published App can auto-install a required, already-published Executa by its minted tool ID. The App archive itself does not install Executa files. A live Cloud Agent installation remains unverified.
 

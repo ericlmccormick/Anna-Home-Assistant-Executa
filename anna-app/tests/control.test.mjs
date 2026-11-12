@@ -61,7 +61,7 @@ test("UI includes explicit draft-only warning and does not store credential fiel
 
 test("Cloud release profile and front-end tool mapping are declared",()=>{
  const app=JSON.parse(fs.readFileSync(path.join(root,"app.json"),"utf8"));
- assert.equal(app.version,"0.1.3");
+ assert.equal(app.version,"0.1.4");
  assert.ok(fs.existsSync(path.join(root,"bundle","anna-tool-ids.js")));
  const main=fs.readFileSync(path.join(root,"bundle","app.js"),"utf8");
  assert.match(main,/AnnaAppRuntime\.connect/);
