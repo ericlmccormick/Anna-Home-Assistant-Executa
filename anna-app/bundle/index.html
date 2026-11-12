@@ -13,27 +13,48 @@
       <div class="brand"><span class="mark" aria-hidden="true">⌂</span><div><h1>Home Assistant</h1><p>Control Center · Anna OS</p></div></div>
       <span class="tag">Developer preview</span>
     </header>
+    <section class="panel intro" aria-labelledby="welcome-title">
+      <div class="welcome-header">
+        <div class="welcome-icon" aria-hidden="true">⌂</div>
+        <div><h2 id="welcome-title">Connect your home. Keep control.</h2>
+        <p>Read sensor values, manage smart devices, and approve sensitive commands from Anna. You choose what Anna is allowed to do.</p></div>
+      </div>
+      <div class="feature-chips"><span>✓ Sensor readings by default</span><span>✓ You control permissions</span><span>✓ Optional action verification</span></div>
+    </section>
+    <section class="panel agent-select" aria-labelledby="agent-title">
+      <div class="section-heading"><div><h2 id="agent-title">Before you start</h2><p>You need a running Home Assistant server and an Anna Agent that can reach it.</p></div></div>
+      <label class="field-label" for="agent-type">Where does your Anna Agent run?</label>
+      <select id="agent-type" class="policy-control">
+        <option value="cloud">Cloud Agent (Anna-hosted)</option>
+        <option value="local">Local Agent (my computer / home network)</option>
+      </select>
+      <div id="agent-explainer" class="agent-note">
+        <strong>Cloud Agent:</strong> Your Home Assistant server must be reachable through a public HTTPS address with a trusted certificate. Private IP addresses, localhost and .local hostnames won't work from Anna's cloud.
+      </div>
+      <p class="small">Home Assistant is not included with this App. You must already run it and create your own access token. <a href="https://www.home-assistant.io/" target="_blank" rel="noopener noreferrer">Learn about Home Assistant</a></p>
+    </section>
     <section class="panel setup" aria-labelledby="setup-title">
-      <h2 id="setup-title">Set up Home Assistant</h2>
+      <h2 id="setup-title">Connect in three steps</h2>
       <ol>
-        <li><strong>Check your Anna Agent.</strong> In Anna, open <b>Agents</b> and confirm the agent you use for chat is online.</li>
-        <li><strong>Open the connector’s credentials.</strong> Click your profile in Anna, then go to <b>Advanced → Executa → Learned → Home Assistant Connector → Credentials</b>.</li>
-        <li><strong>Connect your server.</strong> In the credential form, enter your HTTPS Home Assistant base URL in <code>HA_URL</code> and your long-lived access token in <code>HA_TOKEN</code>. Click <b>Save</b>, then return here and select <b>Test connection</b>.</li>
+        <li><strong>Choose your Agent.</strong> In Anna, open <b>Agents</b> and confirm the agent you use for chat is online.</li>
+        <li><strong>Open secure connection settings.</strong> In Anna, navigate to <b>Advanced → Executa → Home Assistant Connector → Credentials</b>. This is Anna’s secure form for your token.</li>
+        <li><strong>Add your server address and access token.</strong> In the credential form, enter your HTTPS Home Assistant base URL in <code>HA_URL</code> and your long-lived access token in <code>HA_TOKEN</code>. Save there, return here, and select <b>Test connection</b>.</li>
       </ol>
-      <h3>Apply permissions</h3>
+      <details><summary><strong>How to find your Home Assistant access token</strong></summary><p class="small">In Home Assistant, open your profile (lower-left sidebar), find <b>Long-lived access tokens</b>, select <b>Create Token</b>, and copy it directly into the native Anna Executa credential form. Do not paste tokens into chat.</p></details><h3>Choose permissions (optional)</h3>
       <ol>
-        <li>Choose your access levels below and select <b>Copy policy JSON</b>. Sensor reads are enabled by default. To list lights or check their status, use <b>Other entity states</b>. <b>Lights</b> controls actions such as turning them on or off.</li>
-        <li>Return to the same credential form, paste the JSON into <b>Permissions policy (JSON)</b> (<code>HA_POLICY_JSON</code>), and click <b>Save</b>. Then select <b>Read Executa policy</b> here to confirm. <b>Save draft</b> keeps your edits in Control Center until you apply them in the credential form.</li>
+        <li>Choose your access levels below and select <b>Copy settings</b>. Sensor reads are enabled by default. To list lights or check their status, use <b>Other entity states</b>. <b>Lights</b> controls actions such as turning them on or off.</li>
+        <li>Return to the same credential form, paste the settings into <b>Permissions policy</b> (<code>HA_POLICY_JSON</code>), and click <b>Save</b>. Then select <b>Check active settings</b> here to confirm. <b>Save draft</b> keeps your edits in Control Center until you apply them in the credential form.</li>
         <li>If you choose <b>Verify</b>, configure an approval method under <b>Set up verification</b> below. Review and approve pending actions in <b>Identity verification</b>.</li>
       </ol>
       <p class="small">Enter your Home Assistant access token only in Anna’s Executa credential form.</p>
     </section>
+    <div class="runtime-indicator" id="runtime-indicator" role="status" aria-live="polite">Anna connection not verified yet</div>
     <section class="panel" aria-labelledby="connection-title">
-      <div class="section-heading"><div><h2 id="connection-title">Connection</h2><p>Check whether Anna can reach your Home Assistant server.</p></div><span id="connection-status" class="status muted">Not checked</span></div>
+      <div class="section-heading"><div><h2 id="connection-title">Test your connection</h2><p>Anna will connect from the Agent you selected. If this fails, check the Agent network and your server address.</p></div><span id="connection-status" class="status muted">Not checked</span></div>
       <div class="actions"><button id="connection-test" class="button" type="button">Test connection</button></div>
     </section>
     <section class="panel" aria-labelledby="permissions-title">
-      <div class="section-heading"><div><h2 id="permissions-title">Access permissions</h2><p>Choose the access level for each operation.</p></div><span id="changes-status" class="status muted">Defaults</span></div>
+      <div class="section-heading"><div><h2 id="permissions-title">What can Anna access?</h2><p>Everything except sensor readings starts disabled. Choose Disabled, Enabled or Verify for each capability.</p></div><span id="changes-status" class="status muted">Defaults</span></div>
       <div class="legend">
         <span><i class="dot off"></i>Disabled</span>
         <span><i class="dot on"></i>Enabled</span>
@@ -41,8 +62,8 @@
       </div>
       <div id="policy-list" class="policy-list"></div>
       <div class="actions sticky-actions">
-        <button id="save-draft" type="button" class="button">Save draft</button>
-        <button id="copy-json" type="button" class="button primary">Copy policy JSON</button>
+        <button id="save-draft" type="button" class="button">Save choices</button>
+        <button id="copy-json" type="button" class="button primary">Copy settings</button>
         <button id="reset" type="button" class="button">Reset defaults</button>
       </div>
       <p class="small">Selecting <b>Verify</b> creates a pending action requiring explicit confirmation in this Control Center. PIN and TOTP codes can be used when configured. Passkeys depend on Anna's WebAuthn browser permissions. Assist, scripts, scenes, automations and custom events may indirectly control other devices.</p>
@@ -95,11 +116,11 @@
     </section>
     <section class="panel" aria-labelledby="effective-title">
       <div class="section-heading"><div><h2 id="effective-title">Active policy</h2><p>Compare your draft with the live Executa credentials.</p></div></div>
-      <div class="actions"><button id="refresh-policy" class="button" type="button">Read Executa policy</button></div>
+      <div class="actions"><button id="refresh-policy" class="button" type="button">Check active settings</button></div>
       <p id="effective-policy" class="small muted" aria-live="polite">Not read yet. An Anna Agent connection is required.</p>
     </section>
     <p id="message" class="message" role="status" aria-live="polite"></p>
-    <footer>Home Assistant Control Center v0.1.1 · No credentials are stored in the App.</footer>
+    <footer>Home Assistant Control Center v0.1.2 · No credentials are stored in the App.</footer>
   </main>
   <script src="anna-tool-ids.js" defer></script>
   <script type="module" src="app.js"></script>
