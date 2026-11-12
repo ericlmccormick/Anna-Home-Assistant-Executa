@@ -5,17 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>Home Assistant Control Center</title>
+  <link rel="icon" type="image/png" href="assets/home-assistant-logo-128.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="container">
     <header class="masthead">
-      <div class="brand"><span class="mark" aria-hidden="true">⌂</span><div><h1>Home Assistant</h1><p>Control Center · Anna OS</p></div></div>
+      <div class="brand"><img class="brand-logo" src="assets/home-assistant-logo-128.png" alt="Home Assistant Control Center icon" width="48" height="48"><div><h1>Home Assistant</h1><p>Control Center · Anna OS</p></div></div>
       <span class="tag">Developer preview</span>
     </header>
     <section class="panel intro" aria-labelledby="welcome-title">
       <div class="welcome-header">
-        <div class="welcome-icon" aria-hidden="true">⌂</div>
+        <img class="welcome-logo" src="assets/home-assistant-logo-128.png" alt="" width="68" height="68">
         <div><h2 id="welcome-title">Connect your home. Keep control.</h2>
         <p>Read sensor values, manage smart devices, and approve sensitive commands from Anna. You choose what Anna is allowed to do.</p></div>
       </div>
@@ -66,7 +67,7 @@
         <button id="copy-json" type="button" class="button primary">Copy settings</button>
         <button id="reset" type="button" class="button">Reset defaults</button>
       </div>
-      <p class="small">Selecting <b>Verify</b> creates a pending action requiring explicit confirmation in this Control Center. PIN and TOTP codes can be used when configured. Passkeys depend on Anna's WebAuthn browser permissions. Assist, scripts, scenes, automations and custom events may indirectly control other devices.</p>
+      <p class="small">Selecting <b>Verify</b> creates a pending action requiring explicit confirmation in this Control Center. PIN and TOTP codes can be used when configured. Passkey verification is currently unavailable inside Anna App windows, so choose PIN or an authenticator code. Assist, scripts, scenes, automations and custom events may indirectly control other devices.</p>
     </section>
 
     <section class="panel" aria-labelledby="verification-title">
@@ -76,7 +77,7 @@
       <div class="credential-grid">
         <div class="credential-item">
           <span class="credential-label">Passkey (recommended)</span>
-          <p>Biometrics or device unlock through WebAuthn. Requires Anna to allow WebAuthn in its embedded App.</p>
+          <p>Biometrics or device unlock through WebAuthn. Anna currently does not delegate WebAuthn to App windows. Planned for a future compatible host.</p>
         </div>
         <div class="credential-item">
           <span class="credential-label">Authenticator code</span>
@@ -90,9 +91,9 @@
       <div class="actions">
         <label for="verification-method">Approval method</label>
         <select class="policy-control" id="verification-method">
-          <option value="passkey">Passkey / fingerprint / face</option>
+          <option value="pin" selected>PIN</option>
           <option value="totp">Authenticator app code</option>
-          <option value="pin">PIN</option>
+          <option value="passkey" disabled>Passkey (unavailable in Anna iframe)</option>
         </select>
         <label for="verification-code">Code (not needed for passkeys)</label>
         <input id="verification-code" type="password" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code or PIN" maxlength="12">
@@ -106,7 +107,7 @@
       <p class="small">Enter the initial PIN in Anna's native Executa credentials first. You'll use it to register a passkey; no PIN is stored in this App.</p>
       <div class="actions">
         <input id="enroll-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Native Executa approval PIN" maxlength="12">
-        <button class="button" type="button" id="enroll-passkey">Register a passkey</button>
+        <button class="button" type="button" id="enroll-passkey" disabled title="Anna App iframes currently do not support WebAuthn">Register a passkey (future)</button>
       </div>
       <p class="small">For an authenticator app, generate an initial Base32 seed locally, add it to your authenticator, and enter that seed into Anna's <code>HA_TOTP_SECRET</code> credential.</p>
       <div class="actions"><button class="button" type="button" id="generate-totp">Generate authenticator seed</button>
