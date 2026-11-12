@@ -1,9 +1,9 @@
 {
   "slug": "home-assistant-control",
   "name": "Home Assistant Control Center",
-  "version": "0.1.2",
-  "tagline": "Connect Anna to Home Assistant with secure, adjustable device permissions",
-  "description": "Connect your existing Home Assistant smart home to Anna. View sensor readings, authorize device commands, and decide exactly what Anna can do with lights, switches, thermostats, fans, locks, garage doors, alarms, scenes, scripts, and automations. All controls start disabled; sensor readings are enabled after you connect your Home Assistant account. Set each capability to Disabled, Enabled, or Verify. For extra protection, verify individual actions with a PIN, authenticator code, or supported passkey. Optional phone alerts tell you when approval is needed. The app includes a guided setup, connection test, effective-permissions check, and an approval queue. Home Assistant URL, access token, and secrets are managed by Anna Executa credentials, not stored in the web interface. Requires your own Home Assistant server reachable by the selected Anna Agent; Cloud Agents need a publicly reachable HTTPS URL. Home Assistant Assist and automation/scripts can bypass individual device categories, so leave those disabled unless separately constrained.",
+  "version": "0.1.3",
+  "tagline": "Connect Home Assistant to Anna with simple, secure controls",
+  "description": "Connect your existing Home Assistant smart home to Anna. View sensor readings, authorize device commands, and decide exactly what Anna can do with lights, switches, thermostats, fans, locks, garage doors, alarms, scenes, scripts, and automations. All controls start disabled; sensor readings are enabled after you connect your Home Assistant account. Set each capability to Disabled, Enabled, or Verify. For extra protection, verify individual actions with a PIN, authenticator code, or authenticator code. Optional phone alerts tell you when approval is needed. Passkeys are planned, but Anna's current App iframe disallows WebAuthn, so passkey setup is disabled. The app includes a guided setup, connection test, effective-permissions check, and an approval queue. Home Assistant URL, access token, and secrets are managed by Anna Executa credentials, not stored in the web interface. Requires your own Home Assistant server reachable by the selected Anna Agent; Cloud Agents need a publicly reachable HTTPS URL. Home Assistant Assist and automation/scripts can bypass individual device categories, so leave those disabled unless separately constrained.",
   "category": "utilities",
   "homepage_url": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa",
   "support_url": "https://github.com/ericlmccormick/Anna-Home-Assistant-Executa/issues",
@@ -12,5 +12,6 @@
       "path": "./executas/home-assistant"
     }
   },
-  "pricing_model": "free"
+  "pricing_model": "free",
+  "logo_url": "https://raw.githubusercontent.com/ericlmccormick/Anna-Home-Assistant-Executa/fix/anna-review-2026-11/anna-app/assets/home-assistant-logo-128.png"
 }
